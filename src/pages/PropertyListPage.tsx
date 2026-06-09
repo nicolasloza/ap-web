@@ -39,6 +39,7 @@ export default function PropertyListPage() {
     onSearchSubmit,
     onSortChange,
     clearFilters,
+    clearFilter,
   } = usePropertyListQueryState();
   const { items, loading, error } = usePropertyListData({
     query,
@@ -90,10 +91,11 @@ export default function PropertyListPage() {
         itemsLength={items.length}
         loading={loading}
         onClearFilters={clearFilters}
+        onClearFilter={clearFilter}
       />
 
       {loading ? (
-        <Grid container spacing={{ xs: 1.5, sm: 2 }}>
+        <Grid container spacing={{ xs: 1.5, sm: 2 }} sx={{ mt: hasAnyFilter ? 0 : 2 }}>
           {Array.from({ length: 6 }).map((_, i) => (
             <Grid key={i} size={{ xs: 12, sm: 6, md: 4 }}>
               <PropertyCardSkeleton />
@@ -104,8 +106,12 @@ export default function PropertyListPage() {
         <Typography color="text.secondary" sx={{ mt: 2 }}>
           No hay propiedades. Ejecutá el seed en el API.
         </Typography>
+      ) : items.length === 0 ? (
+        <Typography color="text.secondary" sx={{ mt: 4, textAlign: "center" }}>
+          No encontramos propiedades con ese criterio. Probá otra búsqueda.
+        </Typography>
       ) : (
-        <Grid container spacing={{ xs: 1.5, sm: 2 }}>
+        <Grid container spacing={{ xs: 1.5, sm: 2 }} sx={{ mt: hasAnyFilter ? 0 : 2 }}>
           {sortedItems.map((property) => (
             <Grid key={property.id} size={{ xs: 12, sm: 6, md: 4 }}>
               <PropertyListCard property={property} />

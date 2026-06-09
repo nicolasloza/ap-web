@@ -1,4 +1,4 @@
-import { Button, Chip, Paper, Stack, Typography } from "@mui/material";
+import { Box, Button, Chip, Stack, Typography } from "@mui/material";
 import type { Operation } from "../../../types/property";
 
 type ActivePropertyFiltersBarProps = {
@@ -10,6 +10,7 @@ type ActivePropertyFiltersBarProps = {
   itemsLength: number;
   loading: boolean;
   onClearFilters: () => void;
+  onClearFilter: (key: "q" | "type" | "operation") => void;
 };
 
 export default function ActivePropertyFiltersBar({
@@ -21,41 +22,60 @@ export default function ActivePropertyFiltersBar({
   itemsLength,
   loading,
   onClearFilters,
+  onClearFilter,
 }: ActivePropertyFiltersBarProps) {
-  return (
-    <>
-      {hasAnyFilter ? (
-        <Paper variant="outlined" sx={{ px: { xs: 1.5, sm: 2 }, py: 1.25, mb: 2, bgcolor: "background.paper" }}>
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            spacing={1}
-            sx={{ justifyContent: "space-between", alignItems: { xs: "flex-start", sm: "center" } }}
-          >
-            <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>
-              {query ? <Chip size="small" label={`Búsqueda: ${query}`} variant="outlined" /> : null}
-              {propertyType ? <Chip size="small" label={`Tipo: ${propertyTypeLabel}`} variant="outlined" /> : null}
-              {operationFromQuery ? (
-                <Chip
-                  size="small"
-                  label={`Operación: ${operationFromQuery === "sale" ? "Venta" : "Alquiler"}`}
-                  color="primary"
-                />
-              ) : null}
-            </Stack>
-            <Button size="small" onClick={onClearFilters} sx={{ width: { xs: "100%", sm: "auto" } }}>
-              Limpiar filtros
-            </Button>
-          </Stack>
-        </Paper>
-      ) : null}
+  if (!hasAnyFilter) return null;
 
-      {!loading && hasAnyFilter && itemsLength === 0 ? (
-        <Paper variant="outlined" sx={{ px: 2, py: 1.5, mb: 2, bgcolor: "action.hover" }}>
-          <Typography color="text.secondary">
-            No encontramos propiedades con ese criterio. Probá otra búsqueda.
-          </Typography>
-        </Paper>
-      ) : null}
-    </>
+  const filterCount = [query, propertyType, operationFromQuery].filter(Boolean).length;
+  const showCount = !loading && itemsLength > 0;
+
+  return (
+    <Box sx={{ position: "relative", display: "flex", alignItems: "center", mt: 2, mb: 2.5, minHeight: 32 }}>
+      {/* Izquierda: chips */}
+      <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap", alignItems: "center" }}>
+        {query && (
+          <Chip label={`"${query}"`} size="small" onDelete={() => onClearFilter("q")} />
+        )}
+        {propertyType && (
+          <Chip label={propertyTypeLabel} size="small" onDelete={() => onClearFilter("type")} />
+        )}
+        {operationFromQuery && (
+          <Chip
+            label={operationFromQuery === "sale" ? "Venta" : "Alquiler"}
+            size="small"
+            onDelete={() => onClearFilter("operation")}
+          />
+        )}
+      </Stack>
+
+      {/* Centro: conteo (solo cuando hay resultados) */}
+      {showCount && (
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{
+            position: "absolute",
+            left: "50%",
+            transform: "translateX(-50%)",
+            whiteSpace: "nowrap",
+            pointerEvents: "none",
+          }}
+        >
+          {itemsLength} propiedad{itemsLength !== 1 ? "es" : ""}
+        </Typography>
+      )}
+
+      {/* Derecha: limpiar todo (solo con más de un filtro) */}
+      {filterCount > 1 && (
+        <Button
+          size="small"
+          variant="text"
+          onClick={onClearFilters}
+          sx={{ ml: "auto", color: "text.secondary", fontSize: "0.8rem", flexShrink: 0 }}
+        >
+          Limpiar todo
+        </Button>
+      )}
+    </Box>
   );
 }

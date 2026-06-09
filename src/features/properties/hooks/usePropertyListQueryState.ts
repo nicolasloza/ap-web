@@ -63,6 +63,12 @@ export function usePropertyListQueryState() {
 
   const clearFilters = () => navigate("/propiedades");
 
+  const clearFilter = (key: "q" | "type" | "operation") => {
+    const nextParams = new URLSearchParams(search);
+    nextParams.delete(key);
+    navigate(nextParams.toString() ? `/propiedades?${nextParams.toString()}` : "/propiedades");
+  };
+
   return {
     query,
     propertyType,
@@ -79,5 +85,6 @@ export function usePropertyListQueryState() {
     onSearchSubmit,
     onSortChange,
     clearFilters,
+    clearFilter,
   };
 }

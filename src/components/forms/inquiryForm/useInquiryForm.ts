@@ -28,7 +28,7 @@ export function useInquiryForm({ mode, successMessage }: UseInquiryFormParams) {
     reset,
   } = useForm<InquiryFormValues>({
     resolver: zodResolver(isAppraisal ? appraisalSchema : contactSchema) as Resolver<InquiryFormValues>,
-    defaultValues: { fullName: "", firstName: "", lastName: "", email: "", phone: "", message: "" },
+    defaultValues: { fullName: "", firstName: "", lastName: "", propertyAddress: "", email: "", phone: "", message: "" },
     mode: "onTouched",
   });
 

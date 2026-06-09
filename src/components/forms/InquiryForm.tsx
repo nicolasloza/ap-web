@@ -24,29 +24,25 @@ export default function InquiryForm({
         {submitError ? <Alert severity="error">{submitError}</Alert> : null}
 
         {isAppraisal ? (
-          <Grid container spacing={1.2}>
+          <Grid container spacing={2}>
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 label="Nombre"
-                placeholder="Nombre"
                 {...register("firstName")}
                 error={Boolean(errors.firstName)}
                 helperText={errors.firstName?.message}
                 required
                 fullWidth
-                size="small"
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 label="Apellido"
-                placeholder="Apellido"
                 {...register("lastName")}
                 error={Boolean(errors.lastName)}
                 helperText={errors.lastName?.message}
                 required
                 fullWidth
-                size="small"
               />
             </Grid>
           </Grid>
@@ -60,58 +56,54 @@ export default function InquiryForm({
             fullWidth
           />
         )}
+
         <TextField
-          label={isAppraisal ? "E-mail" : "Email"}
-          placeholder={isAppraisal ? "E-mail" : undefined}
+          label="Email"
           type="email"
           {...register("email")}
           error={Boolean(errors.email)}
           helperText={errors.email?.message}
           required
           fullWidth
-          size={isAppraisal ? "small" : "medium"}
         />
         <TextField
-          label={isAppraisal ? "Teléfono" : "Número de contacto"}
-          placeholder={isAppraisal ? "Teléfono" : undefined}
+          label="Teléfono"
           {...register("phone")}
           error={Boolean(errors.phone)}
           helperText={errors.phone?.message}
           required
           fullWidth
-          size={isAppraisal ? "small" : "medium"}
         />
+
+        {isAppraisal && (
+          <TextField
+            label="Dirección de la propiedad"
+            {...register("propertyAddress")}
+            error={Boolean(errors.propertyAddress)}
+            helperText={errors.propertyAddress?.message}
+            required
+            fullWidth
+          />
+        )}
+
         <TextField
-          label={isAppraisal ? "Comentario" : "Mensaje"}
-          placeholder={isAppraisal ? "Comentario" : undefined}
+          label="Mensaje"
           {...register("message")}
           error={Boolean(errors.message)}
           helperText={errors.message?.message}
           required
           fullWidth
           multiline
-          minRows={isAppraisal ? 4 : 5}
-          size={isAppraisal ? "small" : "medium"}
+          minRows={4}
         />
 
-        <Box sx={{ display: "flex", justifyContent: isAppraisal ? "center" : "flex-end" }}>
+        <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
           <Button
             type="submit"
             variant="contained"
+            color="primary"
             disabled={isSubmitting}
-            sx={
-              isAppraisal
-                ? {
-                    borderRadius: 999,
-                    px: 5,
-                    py: 0.8,
-                    textTransform: "none",
-                    fontWeight: 700,
-                    bgcolor: "error.main",
-                    "&:hover": { bgcolor: "error.dark" },
-                  }
-                : { minHeight: 42, width: { xs: "100%", sm: "auto" } }
-            }
+            sx={{ minHeight: 42, width: { xs: "100%", sm: "auto" }, px: 4 }}
           >
             {isSubmitting ? "Enviando..." : submitLabel}
           </Button>

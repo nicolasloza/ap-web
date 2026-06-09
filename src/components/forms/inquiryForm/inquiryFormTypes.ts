@@ -25,6 +25,7 @@ export const appraisalSchema = z.object({
   firstName: z.string().min(1, "El nombre es obligatorio."),
   lastName: z.string().min(1, "El apellido es obligatorio."),
   fullName: z.string().optional().default(""),
+  propertyAddress: z.string().min(1, "La dirección es obligatoria."),
   ...baseFields,
 });
 
@@ -32,6 +33,7 @@ export type InquiryFormValues = {
   fullName: string;
   firstName: string;
   lastName: string;
+  propertyAddress: string;
   email: string;
   phone: string;
   message: string;

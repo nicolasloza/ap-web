@@ -1,26 +1,63 @@
-import { Box, Container, Paper, Stack, Typography } from "@mui/material";
+import { Box, Container, Divider, Grid, Paper, Stack, Typography } from "@mui/material";
 import ContactInfoBlock from "../components/company/ContactInfoBlock";
 import InquiryForm from "../components/forms/InquiryForm";
 
 export default function ContactPage() {
   return (
-    <Container maxWidth="md" sx={{ py: { xs: 2.5, sm: 3 } }}>
-      <Stack spacing={3}>
-        <Box>
-          <Typography variant="h4" component="h1" sx={{ fontWeight: 600, fontSize: { xs: "1.7rem", sm: "2rem" } }} gutterBottom>
-            Contacto
-          </Typography>
-          <Typography color="text.secondary">
-            Completá el formulario y nos pondremos en contacto con vos.
-          </Typography>
-        </Box>
+    <Box sx={{ bgcolor: "background.default", minHeight: "70vh", py: { xs: 2.5, sm: 4, md: 6 } }}>
+      <Container maxWidth="lg">
+        <Stack spacing={{ xs: 3, md: 5 }}>
 
-        <ContactInfoBlock />
+          {/* Header */}
+          <Box>
+            <Typography variant="h4" component="h1" sx={{ fontWeight: 700, mb: 1 }}>
+              Contacto
+            </Typography>
+            <Typography color="text.secondary" sx={{ maxWidth: 560 }}>
+              ¿Tenés alguna consulta? Completá el formulario y nuestro equipo se pondrá en contacto con vos.
+            </Typography>
+          </Box>
 
-        <Paper variant="outlined" sx={{ p: { xs: 2, sm: 2.5 } }}>
-          <InquiryForm mode="contact" />
-        </Paper>
-      </Stack>
-    </Container>
+          <Divider />
+
+          {/* Contenido en dos columnas */}
+          <Grid container spacing={{ xs: 4, md: 6 }} sx={{ alignItems: "flex-start" }}>
+
+            {/* Columna izquierda — Info de contacto */}
+            <Grid size={{ xs: 12, md: 5 }}>
+              <Stack spacing={3}>
+                <Stack spacing={1.5}>
+                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                    Estamos para ayudarte
+                  </Typography>
+                  <Typography color="text.secondary" sx={{ lineHeight: 1.75 }}>
+                    Podés comunicarte con nosotros por teléfono, email o visitarnos en nuestra sede central de lunes a viernes de 9 a 18 hs.
+                  </Typography>
+                </Stack>
+
+                <Divider />
+
+                <ContactInfoBlock />
+              </Stack>
+            </Grid>
+
+            {/* Columna derecha — Formulario */}
+            <Grid size={{ xs: 12, md: 7 }}>
+              <Paper elevation={2} sx={{ p: { xs: 2.5, sm: 3 }, borderRadius: 2 }}>
+                <Typography variant="h6" sx={{ fontWeight: 600, mb: 2.5 }}>
+                  Envianos un mensaje
+                </Typography>
+                <InquiryForm
+                  mode="contact"
+                  submitLabel="Enviar mensaje"
+                  successMessage="Mensaje enviado. Te contactaremos a la brevedad."
+                />
+              </Paper>
+            </Grid>
+
+          </Grid>
+        </Stack>
+      </Container>
+    </Box>
   );
 }

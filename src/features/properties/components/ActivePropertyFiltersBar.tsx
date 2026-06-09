@@ -8,6 +8,7 @@ type ActivePropertyFiltersBarProps = {
   propertyTypeLabel: string;
   operationFromQuery: Operation | undefined;
   itemsLength: number;
+  loading: boolean;
   onClearFilters: () => void;
 };
 
@@ -18,6 +19,7 @@ export default function ActivePropertyFiltersBar({
   propertyTypeLabel,
   operationFromQuery,
   itemsLength,
+  loading,
   onClearFilters,
 }: ActivePropertyFiltersBarProps) {
   return (
@@ -30,12 +32,12 @@ export default function ActivePropertyFiltersBar({
             sx={{ justifyContent: "space-between", alignItems: { xs: "flex-start", sm: "center" } }}
           >
             <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>
-              {query ? <Chip size="small" label={`Busqueda: ${query}`} variant="outlined" /> : null}
+              {query ? <Chip size="small" label={`Búsqueda: ${query}`} variant="outlined" /> : null}
               {propertyType ? <Chip size="small" label={`Tipo: ${propertyTypeLabel}`} variant="outlined" /> : null}
               {operationFromQuery ? (
                 <Chip
                   size="small"
-                  label={`Operacion: ${operationFromQuery === "sale" ? "Venta" : "Alquiler"}`}
+                  label={`Operación: ${operationFromQuery === "sale" ? "Venta" : "Alquiler"}`}
                   color="primary"
                 />
               ) : null}
@@ -47,10 +49,10 @@ export default function ActivePropertyFiltersBar({
         </Paper>
       ) : null}
 
-      {hasAnyFilter && itemsLength === 0 ? (
+      {!loading && hasAnyFilter && itemsLength === 0 ? (
         <Paper variant="outlined" sx={{ px: 2, py: 1.5, mb: 2, bgcolor: "action.hover" }}>
           <Typography color="text.secondary">
-            No encontramos propiedades con ese criterio. Proba otra busqueda.
+            No encontramos propiedades con ese criterio. Probá otra búsqueda.
           </Typography>
         </Paper>
       ) : null}

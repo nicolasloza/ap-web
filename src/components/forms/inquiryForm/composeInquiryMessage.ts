@@ -5,5 +5,13 @@ export function composeInquiryMessage(values: InquiryFormValues, mode: InquiryMo
   if (mode === "contact") {
     return userMessage;
   }
-  return ["Solicitud de tasación", "Mensaje:", userMessage].join("\n");
+  const address = values.propertyAddress?.trim();
+  return [
+    "Solicitud de tasación",
+    address ? `Propiedad: ${address}` : null,
+    "Mensaje:",
+    userMessage,
+  ]
+    .filter(Boolean)
+    .join("\n");
 }

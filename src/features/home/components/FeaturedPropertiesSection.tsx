@@ -1,7 +1,6 @@
-import { Button, Container, Stack, Typography } from "@mui/material";
+import { Box, Button, Card, CardContent, Container, Skeleton, Stack, Typography } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import PageErrorState from "../../../components/feedback/PageErrorState";
-import PageLoadingCenter from "../../../components/feedback/PageLoadingCenter";
 import FeaturedPropertiesCarousel from "./FeaturedPropertiesCarousel";
 import type { Property } from "../../../types/property";
 
@@ -10,6 +9,23 @@ type FeaturedPropertiesSectionProps = {
     loading: boolean;
     error: string | null;
 };
+
+function FeaturedCardSkeleton() {
+    return (
+        <Card variant="outlined">
+            <Skeleton variant="rectangular" height={180} sx={{ display: "block" }} />
+            <CardContent>
+                <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
+                    <Skeleton variant="rounded" width={60} height={22} />
+                    <Skeleton variant="rounded" width={80} height={22} />
+                </Stack>
+                <Skeleton width="80%" height={28} sx={{ mb: 0.5 }} />
+                <Skeleton width="60%" height={20} />
+                <Skeleton width="45%" height={24} sx={{ mt: 1 }} />
+            </CardContent>
+        </Card>
+    );
+}
 
 export default function FeaturedPropertiesSection({ items, loading, error }: FeaturedPropertiesSectionProps) {
     return (
@@ -28,7 +44,13 @@ export default function FeaturedPropertiesSection({ items, loading, error }: Fea
             </Stack>
 
             {loading ? (
-                <PageLoadingCenter ariaLabel="Cargando propiedades destacadas" py={6} />
+                <Box sx={{ display: "flex" }}>
+                    {[0, 1, 2].map((i) => (
+                        <Box key={i} sx={{ flex: { xs: "0 0 100%", sm: "0 0 50%", md: "0 0 33.3333%" }, px: 1 }}>
+                            <FeaturedCardSkeleton />
+                        </Box>
+                    ))}
+                </Box>
             ) : null}
 
             {error ? (

@@ -4,12 +4,12 @@ import {
   Button,
   Card,
   CardContent,
-  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   FormControlLabel,
+  Skeleton,
   Stack,
   Switch,
   Table,
@@ -161,10 +161,26 @@ export default function BackOfficeUsersPage() {
           </Stack>
 
           {loadingUsers ? (
-            <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
-              <CircularProgress size={20} />
-              <Typography variant="body2">Cargando usuarios...</Typography>
-            </Stack>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Usuario</TableCell>
+                  <TableCell>Activo</TableCell>
+                  <TableCell>Fecha de creación</TableCell>
+                  <TableCell align="right">Acciones</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {[0, 1, 2].map((i) => (
+                  <TableRow key={i}>
+                    <TableCell><Skeleton width="80%" /></TableCell>
+                    <TableCell><Skeleton width={30} /></TableCell>
+                    <TableCell><Skeleton width="60%" /></TableCell>
+                    <TableCell align="right"><Skeleton width={100} sx={{ ml: "auto" }} /></TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           ) : users.length === 0 ? (
             <Typography variant="body2" color="text.secondary">
               No hay usuarios cargados.

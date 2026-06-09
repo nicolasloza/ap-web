@@ -1,4 +1,4 @@
-import { Alert, Box, Button, Card, CardActions, CardContent, CircularProgress, Grid, Stack, Typography } from "@mui/material";
+import { Alert, Box, Button, Card, CardActions, CardContent, Grid, Skeleton, Stack, Typography } from "@mui/material";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -64,9 +64,15 @@ export default function BackOfficePropertiesPage() {
             Propiedades existentes
           </Typography>
           {loading ? (
-            <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
-              <CircularProgress size={20} />
-              <Typography variant="body2">Cargando propiedades...</Typography>
+            <Stack spacing={1.5}>
+              {[0, 1, 2].map((i) => (
+                <Card key={i} variant="outlined">
+                  <CardContent sx={{ pb: 1 }}>
+                    <Skeleton width="55%" height={22} />
+                    <Skeleton width="75%" height={18} sx={{ mt: 0.5 }} />
+                  </CardContent>
+                </Card>
+              ))}
             </Stack>
           ) : (
             <Stack spacing={1.5}>

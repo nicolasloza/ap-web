@@ -11,7 +11,7 @@ export default function ClientTagsSection({ tags }: ClientTagsSectionProps) {
                 Principales clientes
             </Typography>
             <Typography color="text.secondary" sx={{ mb: 2.5 }}>
-                Mas de cinco decadas acompanando a personas, empresas e inversores.
+                Más de cinco décadas acompañando a personas, empresas e inversores.
             </Typography>
             <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>
                 {tags.map((tag) => (

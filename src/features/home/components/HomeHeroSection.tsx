@@ -48,7 +48,7 @@ export default function HomeHeroSection({ children, backgroundImageUrl }: HomeHe
                                 textShadow: "2px 2px 4px rgba(0, 0, 0, 0.5)",
                             }}
                         >
-                            Mas de 50 anos
+                            Más de 50 años
                             <br />
                             de <span style={{ color: "#e4b61a" }}>excelencia inmobiliaria</span>
                         </Typography>

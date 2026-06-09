@@ -12,10 +12,10 @@ export default function HomeCtaSection() {
                 >
                     <Box>
                         <Typography component="h2" variant="h4" sx={{ fontWeight: 700 }}>
-                            Necesitas una tasacion profesional?
+                            ¿Necesitás una tasación profesional?
                         </Typography>
                         <Typography sx={{ mt: 1, opacity: 0.92 }}>
-                            Solicita una valuacion y recibi asesoramiento personalizado de nuestro equipo.
+                            Solicitá una valuación y recibí asesoramiento personalizado de nuestro equipo.
                         </Typography>
                     </Box>
                     <Stack direction={{ xs: "column", sm: "row" }} spacing={1.25}>

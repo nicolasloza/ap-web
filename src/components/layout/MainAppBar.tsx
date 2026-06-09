@@ -53,18 +53,6 @@ export default function MainAppBar({ onOpenDrawer }: MainAppBarProps) {
                     >
                         {BRAND.name}
                     </Typography>
-                    <Typography
-                        component="span"
-                        variant="body2"
-                        sx={{
-                            color: "secondary.contrastText",
-                            opacity: 0.8,
-                            whiteSpace: "nowrap",
-                            display: { xs: "none", sm: "inline" },
-                        }}
-                    >
-                        {BRAND.tagline}
-                    </Typography>
                 </Box>
             </Toolbar>
         </AppBar>

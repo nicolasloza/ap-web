@@ -1,4 +1,4 @@
-import type { FormEvent } from "react";
+import type { SubmitEvent } from "react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Operation } from "../../../types/property";
@@ -9,7 +9,7 @@ export function usePropertySearch() {
     const [propertyType, setPropertyType] = useState("");
     const [operation, setOperation] = useState<"" | Operation>("");
 
-    const onSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
+    const onSearchSubmit = (event: SubmitEvent<HTMLFormElement>) => {
         event.preventDefault();
         const q = searchTerm.trim();
         const type = propertyType.trim();

@@ -1,13 +1,15 @@
-import { useMemo, useState, type ChangeEvent, type FormEvent } from "react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { Resolver } from "react-hook-form";
 import { sendContactMessage } from "../../../api/client";
 import { composeInquiryMessage } from "./composeInquiryMessage";
 import {
-  initialFormState,
-  type FormErrors,
-  type FormState,
+  contactSchema,
+  appraisalSchema,
+  type InquiryFormValues,
   type InquiryMode,
 } from "./inquiryFormTypes";
-import { validateInquiryForm } from "./validateInquiryForm";
 
 type UseInquiryFormParams = {
   mode: InquiryMode;
@@ -15,51 +17,29 @@ type UseInquiryFormParams = {
 };
 
 export function useInquiryForm({ mode, successMessage }: UseInquiryFormParams) {
-  const [values, setValues] = useState<FormState>(initialFormState);
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const isAppraisal = mode === "appraisal";
   const [success, setSuccess] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const hasErrors = useMemo(() => Object.keys(errors).length > 0, [errors]);
-  const isAppraisal = mode === "appraisal";
-  const isFormComplete = useMemo(() => {
-    const fullNameComplete = isAppraisal
-      ? values.firstName.trim() !== "" && values.lastName.trim() !== ""
-      : values.fullName.trim() !== "";
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+  } = useForm<InquiryFormValues>({
+    resolver: zodResolver(isAppraisal ? appraisalSchema : contactSchema) as Resolver<InquiryFormValues>,
+    defaultValues: { fullName: "", firstName: "", lastName: "", email: "", phone: "", message: "" },
+    mode: "onTouched",
+  });
 
-    return (
-      fullNameComplete &&
-      values.email.trim() !== "" &&
-      values.phone.trim() !== "" &&
-      values.message.trim() !== ""
-    );
-  }, [isAppraisal, values]);
-
-  const onChange = (key: keyof FormState) => (event: ChangeEvent<HTMLInputElement>) => {
-    const nextValues = { ...values, [key]: event.target.value };
-    setValues(nextValues);
-    if (errors[key]) {
-      setErrors(validateInquiryForm(nextValues, mode));
-    }
-  };
-
-  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const onSubmit = handleSubmit(async (values) => {
     setSuccess(null);
     setSubmitError(null);
-
-    const nextErrors = validateInquiryForm(values, mode);
-    setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0) {
-      return;
-    }
 
     const normalizedFullName = isAppraisal
       ? `${values.firstName.trim()} ${values.lastName.trim()}`.trim()
       : values.fullName.trim();
 
-    setIsSubmitting(true);
     try {
       await sendContactMessage({
         fullName: normalizedFullName,
@@ -69,25 +49,19 @@ export function useInquiryForm({ mode, successMessage }: UseInquiryFormParams) {
         source: mode,
       });
       setSuccess(successMessage);
-      setValues(initialFormState);
-      setErrors({});
+      reset();
     } catch {
       setSubmitError("No se pudo enviar la consulta. Intentá nuevamente.");
-    } finally {
-      setIsSubmitting(false);
     }
-  };
+  });
 
   return {
-    values,
+    register,
     errors,
     isSubmitting,
     success,
     submitError,
-    hasErrors,
     isAppraisal,
-    isFormComplete,
-    onChange,
     onSubmit,
   };
 }

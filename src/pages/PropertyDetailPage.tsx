@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
 import { Link as RouterLink, useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import {
   Box,
   Breadcrumbs,
@@ -14,53 +14,27 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import PageLoadingCenter from "../components/feedback/PageLoadingCenter";
 import PageErrorState from "../components/feedback/PageErrorState";
 import { fetchPropertyById } from "../api/client";
-import type { Property } from "../types/property";
 import { formatOperation, formatPrice } from "../lib/format";
 
 export default function PropertyDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const [p, setP] = useState<Property | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!id) {
-      setError("missing");
-      setLoading(false);
-      return;
-    }
-    let done = false;
-    (async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await fetchPropertyById(id);
-        if (!done) setP(res.data);
-      } catch (e) {
-        if (e instanceof Error && e.message === "not_found") {
-          if (!done) setError("not_found");
-        } else {
-          if (!done) setError(e instanceof Error ? e.message : "Error");
-        }
-        if (!done) setP(null);
-      } finally {
-        if (!done) setLoading(false);
-      }
-    })();
-    return () => {
-      done = true;
-    };
-  }, [id]);
+  const { data: p, isLoading, error } = useQuery({
+    queryKey: ["property", id],
+    queryFn: () => fetchPropertyById(id!).then((r) => r.data),
+    enabled: Boolean(id),
+    retry: (_, err) => !(err instanceof Error && err.message === "not_found"),
+  });
 
-  if (loading) {
+  if (isLoading) {
     return <PageLoadingCenter ariaLabel="Cargando" />;
   }
 
-  if (error === "not_found" || !p) {
+  if (error instanceof Error && error.message === "not_found") {
     return (
       <Container>
         <Typography color="error" gutterBottom>
-          {error === "not_found" ? "Propiedad no encontrada" : "No se pudo cargar"}
+          Propiedad no encontrada
         </Typography>
         <Button component={RouterLink} to="/" startIcon={<ArrowBackIcon />}>
           Volver al listado
@@ -69,10 +43,10 @@ export default function PropertyDetailPage() {
     );
   }
 
-  if (error) {
+  if (error || !p) {
     return (
       <Container>
-        <PageErrorState message={error} />
+        <PageErrorState message={error instanceof Error ? error.message : "No se pudo cargar"} />
         <Button component={RouterLink} to="/" startIcon={<ArrowBackIcon />} sx={{ mt: 1 }}>
           Volver al listado
         </Button>
@@ -114,8 +88,8 @@ export default function PropertyDetailPage() {
             alt=""
             sx={{
               maxWidth: { xs: "100%", sm: 280 },
-                width: { xs: "100%", sm: 280 },
-                height: { xs: 210, sm: 200 },
+              width: { xs: "100%", sm: 280 },
+              height: { xs: 210, sm: 200 },
               objectFit: "cover",
               borderRadius: 1,
             }}

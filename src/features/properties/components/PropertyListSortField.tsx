@@ -1,5 +1,6 @@
 import { MenuItem, TextField } from "@mui/material";
 import type { SortOption } from "../utils/sortProperties";
+import { SORT_MENU_OPTIONS } from "../constants/sortOptions";
 
 type PropertyListSortFieldProps = {
   sort: SortOption;
@@ -19,10 +20,11 @@ export default function PropertyListSortField({
       onChange={(event) => onSortChange(event.target.value as SortOption)}
       sx={{ minWidth: { xs: "100%", sm: 280 } }}
     >
-      <MenuItem value="title_asc">Nombre: A a Z</MenuItem>
-      <MenuItem value="title_desc">Nombre: Z a A</MenuItem>
-      <MenuItem value="price_desc">Precio: Mayor a menor</MenuItem>
-      <MenuItem value="price_asc">Precio: Menor a mayor</MenuItem>
+      {SORT_MENU_OPTIONS.map((option) => (
+        <MenuItem key={option.value} value={option.value}>
+          {option.label}
+        </MenuItem>
+      ))}
     </TextField>
   );
 }

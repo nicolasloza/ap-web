@@ -1,11 +1,10 @@
-import { Container, Grid, Stack, Typography } from "@mui/material";
+import { Container, Grid, Typography } from "@mui/material";
 import { useMemo } from "react";
 import PageLoadingCenter from "../components/feedback/PageLoadingCenter";
 import { PROPERTY_TYPE_OPTIONS } from "../features/constants/propertyTypes";
 import PropertySearchBar from "../features/home/components/PropertySearchBar";
 import ActivePropertyFiltersBar from "../features/properties/components/ActivePropertyFiltersBar";
 import PropertyListCard from "../features/properties/components/PropertyListCard";
-import PropertyListSortField from "../features/properties/components/PropertyListSortField";
 import { usePropertyListData } from "../features/properties/hooks/usePropertyListData";
 import { usePropertyListQueryState } from "../features/properties/hooks/usePropertyListQueryState";
 import { sortProperties } from "../features/properties/utils/sortProperties";
@@ -78,15 +77,10 @@ export default function PropertyListPage() {
         onSearchTermChange={setSearchTerm}
         onPropertyTypeChange={setSelectedPropertyType}
         onOperationChange={setSelectedOperation}
+        sort={sort}
+        onSortChange={onSortChange}
         onSubmit={onSearchSubmit}
       />
-      <Stack
-        direction={{ xs: "column", sm: "row" }}
-        spacing={1.5}
-        sx={{ mt: 1.5, mb: 2, alignItems: { xs: "stretch", sm: "center" }, justifyContent: "space-between" }}
-      >
-        <PropertyListSortField sort={sort} onSortChange={onSortChange} />
-      </Stack>
       <ActivePropertyFiltersBar
         hasAnyFilter={hasAnyFilter}
         query={query}

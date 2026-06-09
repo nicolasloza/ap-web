@@ -8,15 +8,12 @@ export default function InquiryForm({
   successMessage = "Consulta enviada. Te contactaremos a la brevedad.",
 }: InquiryFormProps) {
   const {
-    values,
+    register,
     errors,
     isSubmitting,
     success,
     submitError,
-    hasErrors,
     isAppraisal,
-    isFormComplete,
-    onChange,
     onSubmit,
   } = useInquiryForm({ mode, successMessage });
 
@@ -32,10 +29,9 @@ export default function InquiryForm({
               <TextField
                 label="Nombre"
                 placeholder="Nombre"
-                value={values.firstName}
-                onChange={onChange("firstName")}
+                {...register("firstName")}
                 error={Boolean(errors.firstName)}
-                helperText={errors.firstName}
+                helperText={errors.firstName?.message}
                 required
                 fullWidth
                 size="small"
@@ -45,10 +41,9 @@ export default function InquiryForm({
               <TextField
                 label="Apellido"
                 placeholder="Apellido"
-                value={values.lastName}
-                onChange={onChange("lastName")}
+                {...register("lastName")}
                 error={Boolean(errors.lastName)}
-                helperText={errors.lastName}
+                helperText={errors.lastName?.message}
                 required
                 fullWidth
                 size="small"
@@ -58,10 +53,9 @@ export default function InquiryForm({
         ) : (
           <TextField
             label="Nombre y apellido"
-            value={values.fullName}
-            onChange={onChange("fullName")}
+            {...register("fullName")}
             error={Boolean(errors.fullName)}
-            helperText={errors.fullName}
+            helperText={errors.fullName?.message}
             required
             fullWidth
           />
@@ -70,10 +64,9 @@ export default function InquiryForm({
           label={isAppraisal ? "E-mail" : "Email"}
           placeholder={isAppraisal ? "E-mail" : undefined}
           type="email"
-          value={values.email}
-          onChange={onChange("email")}
+          {...register("email")}
           error={Boolean(errors.email)}
-          helperText={errors.email}
+          helperText={errors.email?.message}
           required
           fullWidth
           size={isAppraisal ? "small" : "medium"}
@@ -81,10 +74,9 @@ export default function InquiryForm({
         <TextField
           label={isAppraisal ? "Teléfono" : "Número de contacto"}
           placeholder={isAppraisal ? "Teléfono" : undefined}
-          value={values.phone}
-          onChange={onChange("phone")}
+          {...register("phone")}
           error={Boolean(errors.phone)}
-          helperText={errors.phone}
+          helperText={errors.phone?.message}
           required
           fullWidth
           size={isAppraisal ? "small" : "medium"}
@@ -92,10 +84,9 @@ export default function InquiryForm({
         <TextField
           label={isAppraisal ? "Comentario" : "Mensaje"}
           placeholder={isAppraisal ? "Comentario" : undefined}
-          value={values.message}
-          onChange={onChange("message")}
+          {...register("message")}
           error={Boolean(errors.message)}
-          helperText={errors.message}
+          helperText={errors.message?.message}
           required
           fullWidth
           multiline
@@ -107,7 +98,7 @@ export default function InquiryForm({
           <Button
             type="submit"
             variant="contained"
-            disabled={isSubmitting || hasErrors || !isFormComplete}
+            disabled={isSubmitting}
             sx={
               isAppraisal
                 ? {

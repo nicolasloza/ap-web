@@ -1,6 +1,6 @@
-import type { FormState, InquiryMode } from "./inquiryFormTypes";
+import type { InquiryFormValues, InquiryMode } from "./inquiryFormTypes";
 
-export function composeInquiryMessage(values: FormState, mode: InquiryMode): string {
+export function composeInquiryMessage(values: InquiryFormValues, mode: InquiryMode): string {
   const userMessage = values.message.trim();
   if (mode === "contact") {
     return userMessage;

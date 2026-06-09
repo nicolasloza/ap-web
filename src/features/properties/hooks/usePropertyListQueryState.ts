@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type SubmitEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { PROPERTY_TYPE_LABELS } from "../../constants/propertyTypes";
 import type { Operation } from "../../../types/property";
@@ -31,7 +31,7 @@ export function usePropertyListQueryState() {
     };
   }, [operationFromQuery, propertyType, query]);
 
-  const onSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const onSearchSubmit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     const nextParams = new URLSearchParams();
     const nextQuery = searchTerm.trim();

@@ -1,5 +1,5 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from "@mui/material";
-import { useState, type FormEvent } from "react";
+import { useState, type SubmitEvent } from "react";
 import { useNavigate } from "react-router-dom";
 
 type LoginDialogProps = { open: boolean; onClose: () => void };
@@ -15,7 +15,7 @@ export default function LoginDialog({ open, onClose }: LoginDialogProps) {
         setPassword("");
     };
 
-    const handleSubmit = (e: FormEvent) => {
+    const handleSubmit = (e: SubmitEvent<HTMLFormElement>) => {
         e.preventDefault();
         // TODO: integrar con API de autenticación
         handleClose();

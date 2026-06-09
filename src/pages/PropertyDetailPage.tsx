@@ -51,7 +51,7 @@ function PropertyDetailSkeleton() {
           <Skeleton width="55%" height={48} sx={{ mb: 2.5 }} />
           <Divider sx={{ mb: 2 }} />
           {[1, 2, 3, 4].map((n) => (
-            <Stack key={n} direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
+            <Stack key={n} direction="row" spacing={1} sx={{ alignItems: "center", mb: 1.5 }}>
               <Skeleton variant="circular" width={20} height={20} />
               <Skeleton width="70%" height={20} />
             </Stack>
@@ -219,7 +219,7 @@ export default function PropertyDetailPage() {
 
             <Stack spacing={1.75} sx={{ mb: 3 }}>
               {specs.map((spec, i) => (
-                <Stack key={i} direction="row" spacing={1.25} alignItems="center">
+                <Stack key={i} direction="row" spacing={1.25} sx={{ alignItems: "center" }}>
                   <Box sx={{ color: "primary.main", display: "flex", flexShrink: 0 }}>{spec.icon}</Box>
                   <Typography variant="body2">{spec.label}</Typography>
                 </Stack>

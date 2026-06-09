@@ -1,6 +1,6 @@
 import { Box, Container, Divider, Grid, Link, Stack, Typography } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
-import { CONTACT_INFO } from "../../features/company/constants/contactInfo";
+import { BRAND, CONTACT_INFO } from "../../features/company/constants/contactInfo";
 
 const NAV_LINKS = [
   { label: "Propiedades", to: "/propiedades" },
@@ -28,10 +28,10 @@ export default function MainFooter() {
           {/* Columna 1 — Marca y contacto */}
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
-              Armando Pepe
+              {BRAND.name}
             </Typography>
             <Typography variant="body2" sx={{ opacity: 0.6, mb: 2, fontSize: "0.78rem", letterSpacing: 1, textTransform: "uppercase" }}>
-              Inmobiliaria
+              {BRAND.tagline}
             </Typography>
             <Stack spacing={0.75}>
               <Typography variant="body2" sx={{ opacity: 0.85 }}>
@@ -104,7 +104,7 @@ export default function MainFooter() {
         <Divider sx={{ borderColor: "rgba(255,255,255,0.1)", mt: { xs: 4, sm: 5 }, mb: 2.5 }} />
 
         <Typography variant="body2" sx={{ opacity: 0.45, textAlign: { xs: "left", sm: "center" }, fontSize: "0.78rem" }}>
-          © {new Date().getFullYear()} Armando Pepe Inmobiliaria. Todos los derechos reservados.
+          © {new Date().getFullYear()} {BRAND.name} {BRAND.tagline}. Todos los derechos reservados.
         </Typography>
       </Container>
     </Box>

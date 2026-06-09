@@ -1,6 +1,7 @@
 import MenuIcon from "@mui/icons-material/Menu";
 import { AppBar, Box, IconButton, Toolbar, Typography } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
+import { BRAND } from "../../features/company/constants/contactInfo";
 
 type MainAppBarProps = {
     onOpenDrawer: () => void;
@@ -50,7 +51,7 @@ export default function MainAppBar({ onOpenDrawer }: MainAppBarProps) {
                             fontSize: { xs: "1.05rem", sm: "1.25rem" },
                         }}
                     >
-                        Armando Pepe
+                        {BRAND.name}
                     </Typography>
                     <Typography
                         component="span"
@@ -62,7 +63,7 @@ export default function MainAppBar({ onOpenDrawer }: MainAppBarProps) {
                             display: { xs: "none", sm: "inline" },
                         }}
                     >
-                        Inmobiliaria
+                        {BRAND.tagline}
                     </Typography>
                 </Box>
             </Toolbar>

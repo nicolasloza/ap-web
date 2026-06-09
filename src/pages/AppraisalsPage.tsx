@@ -31,7 +31,7 @@ export default function AppraisalsPage() {
                     ¿Cómo funciona?
                   </Typography>
                   <Typography color="text.secondary" sx={{ lineHeight: 1.75 }}>
-                    Completá el formulario con tus datos y la dirección de la propiedad a tasar. Un tasador de Armando Pepe se pondrá en contacto con vos y te asesorará sin compromiso.
+                    Completá el formulario con tus datos y la dirección de la propiedad a tasar. Un tasador de nuestra inmobiliaria se pondrá en contacto con vos y te asesorará sin compromiso.
                   </Typography>
                   <Typography color="text.secondary" sx={{ lineHeight: 1.75 }}>
                     Realizamos tasaciones de departamentos, casas, PH, locales, oficinas y terrenos en toda la Ciudad de Buenos Aires.

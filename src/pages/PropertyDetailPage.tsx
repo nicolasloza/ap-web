@@ -24,6 +24,7 @@ import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import PageErrorState from "../components/feedback/PageErrorState";
 import { fetchPropertyById } from "../api/client";
 import { formatOperation, formatPrice } from "../lib/format";
+import { BRAND } from "../features/company/constants/contactInfo";
 
 function PropertyDetailSkeleton() {
   return (
@@ -78,10 +79,10 @@ export default function PropertyDetailPage() {
 
   useEffect(() => {
     if (p?.title) {
-      document.title = `${p.title} | Armando Pepe`;
+      document.title = `${p.title} | ${BRAND.name}`;
     }
     return () => {
-      document.title = "Armando Pepe — Inmobiliaria";
+      document.title = `${BRAND.name} — ${BRAND.tagline}`;
     };
   }, [p?.title]);
 

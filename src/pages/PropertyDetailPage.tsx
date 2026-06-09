@@ -13,7 +13,7 @@ import {
   Typography,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import MailOutlineIcon from "@mui/icons-material/MailOutline";
+import EmailIcon from "@mui/icons-material/Email";
 import PageLoadingCenter from "../components/feedback/PageLoadingCenter";
 import PageErrorState from "../components/feedback/PageErrorState";
 import { fetchPropertyById } from "../api/client";
@@ -120,7 +120,7 @@ export default function PropertyDetailPage() {
 
       <Divider sx={{ my: 3 }} />
 
-      <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} alignItems={{ sm: "center" }}>
+      <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ alignItems: { sm: "center" } }}>
         <Typography variant="body2" color="text.secondary">
           ¿Te interesa esta propiedad?
         </Typography>
@@ -129,7 +129,7 @@ export default function PropertyDetailPage() {
           to="/contacto"
           variant="contained"
           color="primary"
-          startIcon={<MailOutlineIcon />}
+          startIcon={<EmailIcon />}
         >
           Consultar propiedad
         </Button>

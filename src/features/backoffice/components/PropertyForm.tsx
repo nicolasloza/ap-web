@@ -1,5 +1,5 @@
 import { Alert, Button, Divider, MenuItem, Stack, TextField, Typography } from "@mui/material";
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { createProperty, fetchNeighborhoods, fetchPropertyTypes, updateProperty, uploadPropertyImage } from "../../../api/client";
 import type { Currency, NeighborhoodOption, Operation, Property, PropertyImageInput, PropertyTypeOption } from "../../../types/property";
 import { ImageUploader } from "./ImageUploader";
@@ -14,6 +14,12 @@ type PropertyFormProps = {
   onCancelEdit: () => void;
 };
 
+// Una imagen ya persistida (viene del backend, con publicId real) o un archivo
+// elegido en el form que todavía no se subió a Cloudinary (recién se sube al guardar).
+export type ImageEntry =
+  | { status: "uploaded"; url: string; publicId: string; width: number | null; height: number | null; format: string | null; bytes: number | null }
+  | { status: "pending"; file: File; previewUrl: string };
+
 type FormState = {
   operation: Operation;
   type: string;
@@ -26,7 +32,7 @@ type FormState = {
   rooms: string;
   coveredM2: string;
   totalM2: string;
-  images: PropertyImageInput[];
+  images: ImageEntry[];
 };
 
 function toFormState(property: Property | null): FormState {
@@ -59,10 +65,10 @@ function toFormState(property: Property | null): FormState {
     rooms: String(property.rooms),
     coveredM2: property.coveredM2,
     totalM2: property.totalM2 ?? "",
-    images: property.images.map((image, index) => ({
+    images: property.images.map((image) => ({
+      status: "uploaded" as const,
       url: image.url,
       publicId: image.publicId ?? "",
-      sortOrder: index,
       width: image.width,
       height: image.height,
       format: image.format,
@@ -71,8 +77,41 @@ function toFormState(property: Property | null): FormState {
   };
 }
 
-function withSortOrder(images: PropertyImageInput[]) {
-  return images.map((image, index) => ({ ...image, sortOrder: index }));
+function revokePendingPreviews(images: ImageEntry[]) {
+  for (const image of images) {
+    if (image.status === "pending") {
+      URL.revokeObjectURL(image.previewUrl);
+    }
+  }
+}
+
+async function resolveImages(images: ImageEntry[]): Promise<PropertyImageInput[]> {
+  const resolved: PropertyImageInput[] = [];
+  for (const image of images) {
+    if (image.status === "uploaded") {
+      resolved.push({
+        url: image.url,
+        publicId: image.publicId,
+        sortOrder: 0,
+        width: image.width,
+        height: image.height,
+        format: image.format,
+        bytes: image.bytes,
+      });
+      continue;
+    }
+    const uploaded = await uploadPropertyImage(image.file);
+    resolved.push({
+      url: uploaded.secureUrl,
+      publicId: uploaded.publicId,
+      sortOrder: 0,
+      width: uploaded.width,
+      height: uploaded.height,
+      format: uploaded.format,
+      bytes: uploaded.bytes,
+    });
+  }
+  return resolved.map((image, index) => ({ ...image, sortOrder: index }));
 }
 
 export function PropertyForm({ selectedProperty, onSaved, onCancelEdit }: PropertyFormProps) {
@@ -82,11 +121,22 @@ export function PropertyForm({ selectedProperty, onSaved, onCancelEdit }: Proper
   const [saving, setSaving] = useState(false);
   const [loadingTypes, setLoadingTypes] = useState(true);
   const [loadingNeighborhoods, setLoadingNeighborhoods] = useState(true);
-  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const imagesRef = useRef<ImageEntry[]>(state.images);
 
   useEffect(() => {
+    imagesRef.current = state.images;
+  }, [state.images]);
+
+  // Los previews de imágenes pendientes son object URLs locales: hay que liberarlos
+  // al desmontar o al cambiar de propiedad para no perder la memoria de esos blobs.
+  useEffect(() => {
+    return () => revokePendingPreviews(imagesRef.current);
+  }, []);
+
+  useEffect(() => {
+    revokePendingPreviews(imagesRef.current);
     setState(toFormState(selectedProperty));
     setError(null);
     setSuccess(null);
@@ -158,7 +208,7 @@ export function PropertyForm({ selectedProperty, onSaved, onCancelEdit }: Proper
     [isEditing, selectedProperty]
   );
 
-  async function handleUpload(files: FileList) {
+  function handleFilesSelected(files: FileList) {
     setError(null);
     setSuccess(null);
 
@@ -179,27 +229,24 @@ export function PropertyForm({ selectedProperty, onSaved, onCancelEdit }: Proper
       }
     }
 
-    setUploading(true);
-    try {
-      const uploadedImages: PropertyImageInput[] = [];
-      for (const file of pending) {
-        const uploaded = await uploadPropertyImage(file);
-        uploadedImages.push({
-          url: uploaded.secureUrl,
-          publicId: uploaded.publicId,
-          sortOrder: 0,
-          width: uploaded.width,
-          height: uploaded.height,
-          format: uploaded.format,
-          bytes: uploaded.bytes,
-        });
+    // No se sube nada a Cloudinary todavía: solo se guarda un preview local.
+    // La subida real ocurre recién en handleSubmit, al confirmar el guardado.
+    const newEntries: ImageEntry[] = pending.map((file) => ({
+      status: "pending",
+      file,
+      previewUrl: URL.createObjectURL(file),
+    }));
+    setState((prev) => ({ ...prev, images: [...prev.images, ...newEntries] }));
+  }
+
+  function handleRemoveImage(index: number) {
+    setState((prev) => {
+      const target = prev.images[index];
+      if (target.status === "pending") {
+        URL.revokeObjectURL(target.previewUrl);
       }
-      setState((prev) => ({ ...prev, images: withSortOrder([...prev.images, ...uploadedImages]) }));
-    } catch (uploadError) {
-      setError(uploadError instanceof Error ? uploadError.message : "No se pudo subir la imagen");
-    } finally {
-      setUploading(false);
-    }
+      return { ...prev, images: prev.images.filter((_image, imageIndex) => imageIndex !== index) };
+    });
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -211,14 +258,21 @@ export function PropertyForm({ selectedProperty, onSaved, onCancelEdit }: Proper
       setError("Debes cargar al menos una imagen.");
       return;
     }
-    if (state.images.some((image) => !image.publicId.trim())) {
-      setError("Hay imágenes sin publicId. Reemplazalas por imágenes subidas a Cloudinary.");
-      return;
-    }
 
     const rooms = Number(state.rooms);
     if (!Number.isInteger(rooms) || rooms < 0) {
       setError("El campo ambientes debe ser un entero válido.");
+      return;
+    }
+
+    setSaving(true);
+
+    let images: PropertyImageInput[];
+    try {
+      images = await resolveImages(state.images);
+    } catch (uploadError) {
+      setError(uploadError instanceof Error ? uploadError.message : "No se pudo subir una imagen");
+      setSaving(false);
       return;
     }
 
@@ -234,19 +288,17 @@ export function PropertyForm({ selectedProperty, onSaved, onCancelEdit }: Proper
       rooms,
       coveredM2: state.coveredM2.trim(),
       totalM2: state.totalM2.trim() ? state.totalM2.trim() : null,
-      images: withSortOrder(state.images),
+      images,
     };
 
-    setSaving(true);
     try {
       const response = selectedProperty
         ? await updateProperty(selectedProperty.id, payload)
         : await createProperty(payload);
       onSaved(response.data);
       setSuccess(selectedProperty ? "Propiedad actualizada correctamente." : "Propiedad creada correctamente.");
-      if (!selectedProperty) {
-        setState(toFormState(null));
-      }
+      revokePendingPreviews(state.images);
+      setState(selectedProperty ? toFormState(response.data) : toFormState(null));
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : "No se pudo guardar la propiedad");
     } finally {
@@ -344,31 +396,26 @@ export function PropertyForm({ selectedProperty, onSaved, onCancelEdit }: Proper
       <Typography variant="subtitle1">Imágenes</Typography>
       <ImageUploader
         images={state.images}
-        uploading={uploading}
+        disabled={saving}
         maxImages={MAX_IMAGES}
-        onFilesSelected={handleUpload}
-        onRemoveImage={(index) =>
-          setState((prev) => ({
-            ...prev,
-            images: withSortOrder(prev.images.filter((_image, imageIndex) => imageIndex !== index)),
-          }))
-        }
+        onFilesSelected={handleFilesSelected}
+        onRemoveImage={handleRemoveImage}
         onMoveImage={(from, to) =>
           setState((prev) => {
             const images = prev.images.slice();
             const [moved] = images.splice(from, 1);
             images.splice(to, 0, moved);
-            return { ...prev, images: withSortOrder(images) };
+            return { ...prev, images };
           })
         }
       />
 
       <Stack direction="row" spacing={1.5}>
-        <Button type="submit" variant="contained" disabled={saving || uploading}>
+        <Button type="submit" variant="contained" disabled={saving}>
           {saving ? "Guardando..." : isEditing ? "Actualizar propiedad" : "Crear propiedad"}
         </Button>
         {isEditing ? (
-          <Button type="button" variant="outlined" onClick={onCancelEdit} disabled={saving || uploading}>
+          <Button type="button" variant="outlined" onClick={onCancelEdit} disabled={saving}>
             Cancelar edición
           </Button>
         ) : null}

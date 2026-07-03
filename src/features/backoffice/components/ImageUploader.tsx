@@ -1,15 +1,15 @@
-import { Box, Button, Card, CardMedia, IconButton, Stack, Typography } from "@mui/material";
+import { Box, Button, Card, CardMedia, Chip, IconButton, Stack, Typography } from "@mui/material";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import DeleteIcon from "@mui/icons-material/Delete";
-import type { PropertyImageInput } from "../../../types/property";
+import type { ImageEntry } from "./PropertyForm";
 
 type ImageUploaderProps = {
-  images: PropertyImageInput[];
+  images: ImageEntry[];
   onFilesSelected: (files: FileList) => void;
   onRemoveImage: (index: number) => void;
   onMoveImage: (from: number, to: number) => void;
-  uploading: boolean;
+  disabled: boolean;
   maxImages: number;
 };
 
@@ -18,13 +18,13 @@ export function ImageUploader({
   onFilesSelected,
   onRemoveImage,
   onMoveImage,
-  uploading,
+  disabled,
   maxImages,
 }: ImageUploaderProps) {
   return (
     <Stack spacing={1.5}>
-      <Button component="label" variant="outlined" disabled={uploading || images.length >= maxImages}>
-        {uploading ? "Subiendo..." : "Agregar imágenes (JPG/PNG)"}
+      <Button component="label" variant="outlined" disabled={disabled || images.length >= maxImages}>
+        Agregar imágenes (JPG/PNG)
         <input
           hidden
           multiple
@@ -39,26 +39,40 @@ export function ImageUploader({
         />
       </Button>
       <Typography variant="caption" color="text.secondary">
-        {images.length}/{maxImages} imágenes
+        {images.length}/{maxImages} imágenes · se suben a Cloudinary recién al guardar
       </Typography>
 
       <Stack spacing={1}>
         {images.map((image, index) => (
-          <Card key={`${image.publicId}-${index}`} variant="outlined" sx={{ p: 1 }}>
+          <Card
+            key={image.status === "uploaded" ? `${image.publicId}-${index}` : image.previewUrl}
+            variant="outlined"
+            sx={{ p: 1 }}
+          >
             <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
-              <CardMedia component="img" image={image.url} alt={`Imagen ${index + 1}`} sx={{ width: 96, height: 72 }} />
+              <CardMedia
+                component="img"
+                image={image.status === "uploaded" ? image.url : image.previewUrl}
+                alt={`Imagen ${index + 1}`}
+                sx={{ width: 96, height: 72 }}
+              />
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography variant="body2" noWrap>
-                  {image.publicId || "Sin publicId"}
+                  {image.status === "uploaded" ? image.publicId || "Sin publicId" : image.file.name}
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Orden: {index + 1}
-                </Typography>
+                <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Orden: {index + 1}
+                  </Typography>
+                  {image.status === "pending" ? (
+                    <Chip label="Pendiente de subir" size="small" color="warning" variant="outlined" />
+                  ) : null}
+                </Stack>
               </Box>
               <IconButton
                 size="small"
                 aria-label="Mover arriba"
-                disabled={index === 0}
+                disabled={disabled || index === 0}
                 onClick={() => onMoveImage(index, index - 1)}
               >
                 <ArrowUpwardIcon fontSize="small" />
@@ -66,12 +80,12 @@ export function ImageUploader({
               <IconButton
                 size="small"
                 aria-label="Mover abajo"
-                disabled={index === images.length - 1}
+                disabled={disabled || index === images.length - 1}
                 onClick={() => onMoveImage(index, index + 1)}
               >
                 <ArrowDownwardIcon fontSize="small" />
               </IconButton>
-              <IconButton size="small" aria-label="Eliminar imagen" onClick={() => onRemoveImage(index)}>
+              <IconButton size="small" aria-label="Eliminar imagen" disabled={disabled} onClick={() => onRemoveImage(index)}>
                 <DeleteIcon fontSize="small" />
               </IconButton>
             </Stack>

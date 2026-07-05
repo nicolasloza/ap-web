@@ -1,12 +1,13 @@
-import { Box, useMediaQuery } from "@mui/material";
+import { Box, CircularProgress, useMediaQuery } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import AppRoutes from "./app/routes";
 import LoginDialog from "./components/auth/LoginDialog";
 import MainAppBar from "./components/layout/MainAppBar";
 import MainFooter from "./components/layout/MainFooter";
 import NavigationDrawer from "./components/layout/NavigationDrawer";
+import { useAuth } from "./features/auth/context/AuthContext";
 
 export default function App() {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -15,6 +16,7 @@ export default function App() {
   const isDesktop = useMediaQuery(theme.breakpoints.up("sm"));
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const { user, isLoading } = useAuth();
   const appBarOffset = isDesktop ? 72 : 56;
 
   const openDrawer = () => setDrawerOpen(true);
@@ -26,6 +28,11 @@ export default function App() {
   };
 
   const openLoginModal = () => {
+    if (user) {
+      navigate("/admin");
+      closeDrawer();
+      return;
+    }
     setLoginOpen(true);
     closeDrawer();
   };
@@ -33,6 +40,16 @@ export default function App() {
   const isAdminRoute = pathname.startsWith("/admin");
 
   if (isAdminRoute) {
+    if (isLoading) {
+      return (
+        <Box sx={{ minHeight: "100vh", bgcolor: "background.default", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <CircularProgress color="primary" />
+        </Box>
+      );
+    }
+    if (!user) {
+      return <Navigate to="/" replace />;
+    }
     return (
       <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
         <AppRoutes />

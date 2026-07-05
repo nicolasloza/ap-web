@@ -140,7 +140,7 @@ export async function fetchAdminPropertyList(
   if (filters.maxPrice !== undefined) {
     u.searchParams.set("maxPrice", String(filters.maxPrice));
   }
-  const r = await fetch(u.toString());
+  const r = await fetch(u.toString(), { credentials: "include" });
   if (!r.ok) {
     const text = await r.text();
     throw new Error(text || r.statusText);
@@ -168,6 +168,7 @@ export async function uploadPropertyImage(file: File): Promise<UploadedPropertyI
 
   const r = await fetch(`${baseUrl()}/admin/uploads/property-image`, {
     method: "POST",
+    credentials: "include",
     body,
   });
   if (!r.ok) {
@@ -178,7 +179,9 @@ export async function uploadPropertyImage(file: File): Promise<UploadedPropertyI
 }
 
 export async function fetchAdminPropertyById(id: string): Promise<PropertyDetailResponse> {
-  const r = await fetch(`${baseUrl()}/admin/properties/${encodeURIComponent(id)}`);
+  const r = await fetch(`${baseUrl()}/admin/properties/${encodeURIComponent(id)}`, {
+    credentials: "include",
+  });
   if (r.status === 404) {
     throw new Error("not_found");
   }
@@ -192,6 +195,7 @@ export async function fetchAdminPropertyById(id: string): Promise<PropertyDetail
 export async function createProperty(payload: PropertyInput): Promise<PropertyDetailResponse> {
   const r = await fetch(`${baseUrl()}/admin/properties`, {
     method: "POST",
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
     },
@@ -207,6 +211,7 @@ export async function createProperty(payload: PropertyInput): Promise<PropertyDe
 export async function updateProperty(id: string, payload: PropertyInput): Promise<PropertyDetailResponse> {
   const r = await fetch(`${baseUrl()}/admin/properties/${encodeURIComponent(id)}`, {
     method: "PUT",
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
     },
@@ -222,6 +227,7 @@ export async function updateProperty(id: string, payload: PropertyInput): Promis
 export async function deleteProperty(id: string): Promise<void> {
   const r = await fetch(`${baseUrl()}/admin/properties/${encodeURIComponent(id)}`, {
     method: "DELETE",
+    credentials: "include",
   });
   if (!r.ok) {
     const text = await r.text();
@@ -246,7 +252,7 @@ export type AdminUserUpdateInput = {
 export async function fetchAdminUsers(includeInactive = true): Promise<AdminUserListResponse> {
   const u = new URL("admin/users", `${baseUrl()}/`);
   u.searchParams.set("includeInactive", String(includeInactive));
-  const r = await fetch(u.toString());
+  const r = await fetch(u.toString(), { credentials: "include" });
   if (!r.ok) {
     const text = await r.text();
     throw new Error(text || r.statusText);
@@ -257,6 +263,7 @@ export async function fetchAdminUsers(includeInactive = true): Promise<AdminUser
 export async function createAdminUser(payload: AdminUserInput): Promise<AdminUserDetailResponse> {
   const r = await fetch(`${baseUrl()}/admin/users`, {
     method: "POST",
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
     },
@@ -272,6 +279,7 @@ export async function createAdminUser(payload: AdminUserInput): Promise<AdminUse
 export async function updateAdminUser(id: string, payload: AdminUserUpdateInput): Promise<AdminUserDetailResponse> {
   const r = await fetch(`${baseUrl()}/admin/users/${encodeURIComponent(id)}`, {
     method: "PUT",
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
     },
@@ -287,9 +295,53 @@ export async function updateAdminUser(id: string, payload: AdminUserUpdateInput)
 export async function deleteAdminUser(id: string): Promise<void> {
   const r = await fetch(`${baseUrl()}/admin/users/${encodeURIComponent(id)}`, {
     method: "DELETE",
+    credentials: "include",
   });
   if (!r.ok) {
     const text = await r.text();
     throw new Error(text || r.statusText);
   }
+}
+
+export type AuthUser = {
+  id: string;
+  username: string;
+  isAdmin: boolean;
+};
+
+export async function loginAdmin(username: string, password: string): Promise<AuthUser> {
+  const r = await fetch(`${baseUrl()}/auth/login`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ username, password }),
+  });
+  if (!r.ok) {
+    const body = await r.json().catch(() => null);
+    throw new Error(body?.error || r.statusText);
+  }
+  const { data } = (await r.json()) as { data: AuthUser };
+  return data;
+}
+
+export async function logoutAdmin(): Promise<void> {
+  await fetch(`${baseUrl()}/auth/logout`, {
+    method: "POST",
+    credentials: "include",
+  });
+}
+
+export async function fetchCurrentUser(): Promise<AuthUser | null> {
+  const r = await fetch(`${baseUrl()}/auth/me`, { credentials: "include" });
+  if (r.status === 401) {
+    return null;
+  }
+  if (!r.ok) {
+    const text = await r.text();
+    throw new Error(text || r.statusText);
+  }
+  const { data } = (await r.json()) as { data: AuthUser };
+  return data;
 }

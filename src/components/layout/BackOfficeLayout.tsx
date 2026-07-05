@@ -1,10 +1,12 @@
 import HomeWorkOutlinedIcon from "@mui/icons-material/HomeWorkOutlined";
 import GroupOutlinedIcon from "@mui/icons-material/GroupOutlined";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import LogoutIcon from "@mui/icons-material/Logout";
 import { Box, Stack, Typography } from "@mui/material";
 import type { ReactNode } from "react";
-import { Link as RouterLink, useLocation } from "react-router-dom";
+import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
 import { BRAND } from "../../features/company/constants/contactInfo";
+import { useAuth } from "../../features/auth/context/AuthContext";
 import { FONT_MONO } from "../../theme/tokens";
 
 const SIDEBAR_WIDTH = 240;
@@ -20,6 +22,13 @@ type BackOfficeLayoutProps = {
 
 export default function BackOfficeLayout({ children }: BackOfficeLayoutProps) {
   const { pathname } = useLocation();
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/");
+  };
 
   return (
     <Box sx={{ display: "flex", minHeight: "100vh" }}>
@@ -100,6 +109,32 @@ export default function BackOfficeLayout({ children }: BackOfficeLayoutProps) {
         >
           <ArrowBackIcon fontSize="small" />
           <Typography sx={{ fontSize: 14 }}>Volver al sitio</Typography>
+        </Stack>
+
+        <Stack
+          component="button"
+          type="button"
+          onClick={handleLogout}
+          direction="row"
+          spacing={1.5}
+          sx={{
+            width: "100%",
+            alignItems: "center",
+            px: 1.5,
+            py: 1.25,
+            mt: 0.5,
+            border: "none",
+            borderRadius: 1,
+            bgcolor: "transparent",
+            color: "text.secondary",
+            cursor: "pointer",
+            font: "inherit",
+            textAlign: "left",
+            "&:hover": { bgcolor: "action.hover" },
+          }}
+        >
+          <LogoutIcon fontSize="small" />
+          <Typography sx={{ fontSize: 14 }}>Cerrar sesión</Typography>
         </Stack>
       </Box>
 

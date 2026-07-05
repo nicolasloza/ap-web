@@ -1,25 +1,38 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from "@mui/material";
+import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from "@mui/material";
 import { useState, type SubmitEvent } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../features/auth/context/AuthContext";
 
 type LoginDialogProps = { open: boolean; onClose: () => void };
 
 export default function LoginDialog({ open, onClose }: LoginDialogProps) {
-    const [email, setEmail] = useState("");
+    const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+    const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+    const { login } = useAuth();
     const navigate = useNavigate();
 
     const handleClose = () => {
         onClose();
-        setEmail("");
+        setUsername("");
         setPassword("");
+        setError(null);
     };
 
-    const handleSubmit = (e: SubmitEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
         e.preventDefault();
-        // TODO: integrar con API de autenticación
-        handleClose();
-        navigate("/admin");
+        setError(null);
+        setLoading(true);
+        try {
+            await login(username.trim(), password);
+            handleClose();
+            navigate("/admin");
+        } catch (loginError) {
+            setError(loginError instanceof Error ? loginError.message : "No se pudo iniciar sesión");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -27,18 +40,20 @@ export default function LoginDialog({ open, onClose }: LoginDialogProps) {
             <DialogTitle id="login-dialog-title">Iniciar sesión</DialogTitle>
             <form onSubmit={handleSubmit} noValidate>
                 <DialogContent>
+                    {error ? <Alert severity="error" sx={{ mb: 1.5 }}>{error}</Alert> : null}
                     <TextField
                         autoFocus
                         margin="dense"
-                        id="login-email"
-                        name="email"
-                        label="Correo"
-                        type="email"
+                        id="login-username"
+                        name="username"
+                        label="Usuario"
+                        type="text"
                         fullWidth
                         required
-                        autoComplete="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        autoComplete="username"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        disabled={loading}
                         sx={{ mb: 1 }}
                     />
                     <TextField
@@ -52,14 +67,15 @@ export default function LoginDialog({ open, onClose }: LoginDialogProps) {
                         autoComplete="current-password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
+                        disabled={loading}
                     />
                 </DialogContent>
                 <DialogActions sx={{ px: 3, pb: 2 }}>
-                    <Button type="button" onClick={handleClose}>
+                    <Button type="button" onClick={handleClose} disabled={loading}>
                         Cancelar
                     </Button>
-                    <Button type="submit" variant="contained">
-                        Ingresar
+                    <Button type="submit" variant="contained" disabled={loading}>
+                        {loading ? "Ingresando..." : "Ingresar"}
                     </Button>
                 </DialogActions>
             </form>

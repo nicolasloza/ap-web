@@ -20,6 +20,7 @@ import BedOutlinedIcon from "@mui/icons-material/BedOutlined";
 import SquareFootIcon from "@mui/icons-material/SquareFoot";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
+import GoogleMapEmbed from "../components/common/GoogleMapEmbed";
 import PageErrorState from "../components/feedback/PageErrorState";
 import InquiryForm from "../components/forms/InquiryForm";
 import PropertyGalleryMosaic from "../features/properties/components/PropertyGalleryMosaic";
@@ -232,6 +233,15 @@ export default function PropertyDetailPage() {
             <Typography variant="body1" sx={{ whiteSpace: "pre-line", lineHeight: 1.8, color: "text.secondary" }}>
               {p.description}
             </Typography>
+
+            <Typography variant="h6" sx={{ mt: 4, mb: 1.5, fontWeight: 600 }}>
+              Ubicación
+            </Typography>
+            <GoogleMapEmbed
+              address={[p.address, p.neighborhood, p.city, "Argentina"].filter(Boolean).join(", ")}
+              title={`Mapa de ${p.neighborhood}, ${p.city}`}
+              height={{ xs: 200, sm: 260, md: 320 }}
+            />
           </Grid>
 
           {/* Columna derecha — Formulario de consulta */}

@@ -146,6 +146,7 @@ export default function BackOfficePropertiesPage() {
                 fullWidth
                 value={operation}
                 onChange={(e) => setOperation(e.target.value as "" | Operation)}
+                slotProps={{ select: { displayEmpty: true } }}
               >
                 <MenuItem value="">Todas</MenuItem>
                 <MenuItem value="sale">Venta</MenuItem>
@@ -160,6 +161,7 @@ export default function BackOfficePropertiesPage() {
                 fullWidth
                 value={priceRangeValue}
                 onChange={(e) => setPriceRangeValue(e.target.value)}
+                slotProps={{ select: { displayEmpty: true } }}
               >
                 {PRICE_RANGE_OPTIONS.map((option) => (
                   <MenuItem key={option.value} value={option.value}>

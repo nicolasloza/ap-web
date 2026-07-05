@@ -150,6 +150,7 @@ export default function PropertySearchBar({
                             value={propertyType}
                             onChange={(e) => onPropertyTypeChange(e.target.value)}
                             fullWidth
+                            slotProps={{ select: { displayEmpty: true } }}
                         >
                             <MenuItem value="">Todos</MenuItem>
                             {propertyTypeOptions.map((option) => (
@@ -217,6 +218,7 @@ export default function PropertySearchBar({
                                     value={selectedNeighborhood ?? ""}
                                     onChange={(e) => onNeighborhoodChange?.(e.target.value)}
                                     fullWidth
+                                    slotProps={{ select: { displayEmpty: true } }}
                                 >
                                     <MenuItem value="">Todos los barrios</MenuItem>
                                     {neighborhoods?.map((option) => (
@@ -234,6 +236,7 @@ export default function PropertySearchBar({
                                     value={selectedPriceRange ?? ""}
                                     onChange={(e) => onPriceRangeChange?.(e.target.value)}
                                     fullWidth
+                                    slotProps={{ select: { displayEmpty: true } }}
                                 >
                                     {PRICE_RANGE_OPTIONS.map((option) => (
                                         <MenuItem key={option.value} value={option.value}>

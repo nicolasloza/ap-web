@@ -2,7 +2,7 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import HouseSidingOutlinedIcon from "@mui/icons-material/HouseSidingOutlined";
 import PhotoCameraOutlinedIcon from "@mui/icons-material/PhotoCameraOutlined";
-import PlaceRoundedIcon from "@mui/icons-material/PlaceRounded";
+import GoogleMapEmbed from "../../../components/common/GoogleMapEmbed";
 import {
   Alert,
   Box,
@@ -361,8 +361,6 @@ export function PropertyForm({ selectedProperty, onSaved, onCancel }: PropertyFo
     void submit(true);
   }
 
-  const neighborhoodLabel = useMemo(() => state.neighborhood || "Seleccioná un barrio", [state.neighborhood]);
-
   const missingFields = useMemo(() => {
     const missing: string[] = [];
     if (!state.title.trim()) missing.push("Título de la propiedad");
@@ -533,28 +531,10 @@ export function PropertyForm({ selectedProperty, onSaved, onCancel }: PropertyFo
                   </TextField>
                 </Box>
 
-                <Box
-                  sx={{
-                    position: "relative",
-                    height: 180,
-                    borderRadius: 1,
-                    border: 1,
-                    borderColor: "divider",
-                    overflow: "hidden",
-                    backgroundImage:
-                      "linear-gradient(rgba(245,245,245,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(245,245,245,0.05) 1px, transparent 1px)",
-                    backgroundSize: "24px 24px",
-                    bgcolor: "background.default",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Stack spacing={0.5} sx={{ alignItems: "center", color: "text.secondary" }}>
-                    <PlaceRoundedIcon sx={{ color: "primary.main", fontSize: 32 }} />
-                    <Typography sx={{ fontFamily: FONT_MONO, fontSize: 12 }}>{neighborhoodLabel}, CABA</Typography>
-                  </Stack>
-                </Box>
+                <GoogleMapEmbed
+                  address={[state.address, state.neighborhood, "CABA, Argentina"].filter(Boolean).join(", ")}
+                  height={{ xs: 200, sm: 240 }}
+                />
               </Stack>
             </Paper>
 

@@ -91,7 +91,7 @@ export default function PropertyListPage() {
         <Typography
           sx={{ fontFamily: FONT_MONO, fontSize: 12, letterSpacing: "0.1em", color: "primary.main" }}
         >
-          PORTFOLIO {new Date().getFullYear()}
+          PROPIEDADES {new Date().getFullYear()}
         </Typography>
       </Stack>
       <Typography variant="h3" component="h1" gutterBottom sx={{ fontSize: { xs: "2rem", sm: "2.75rem" } }}>

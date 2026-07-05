@@ -11,28 +11,28 @@ const theme = createTheme({
     },
   },
   palette: {
-    mode: "light",
+    mode: "dark",
     primary: {
       main: "#e4b61a",
       light: "#fbe134",
       dark: "#b18a14",
-      contrastText: "#0b0c0c",
+      contrastText: "#0e0e0e",
     },
     secondary: {
       main: "#2a2e34",
       light: "#3a3f46",
       dark: "#0b0c0c",
-      contrastText: "#e9eaec",
+      contrastText: "#f5f5f5",
     },
     background: {
-      default: "#e9eaec",
-      paper: "#ffffff",
+      default: "#131313",
+      paper: "#1c1b1b",
     },
     text: {
-      primary: "#2a2e34",
-      secondary: "rgba(42, 46, 52, 0.8)",
+      primary: "#f5f5f5",
+      secondary: "rgba(245, 245, 245, 0.7)",
     },
-    divider: "rgba(42, 46, 52, 0.18)",
+    divider: "rgba(245, 245, 245, 0.12)",
     action: {
       hover: "rgba(228, 182, 26, 0.12)",
       selected: "rgba(228, 182, 26, 0.2)",
@@ -40,32 +40,43 @@ const theme = createTheme({
     },
   },
   typography: {
-    fontFamily: "Roboto, Helvetica, Arial, sans-serif",
-    h1: { fontWeight: 800, lineHeight: 1.1 },
-    h2: { fontWeight: 700, lineHeight: 1.15 },
-    h3: { fontWeight: 700, lineHeight: 1.2 },
-    h4: { fontWeight: 700, lineHeight: 1.2 },
-    h5: { fontWeight: 600 },
+    fontFamily: "'Hanken Grotesk', Helvetica, Arial, sans-serif",
+    h1: { fontWeight: 800, lineHeight: 1.1, letterSpacing: "-0.02em" },
+    h2: { fontWeight: 700, lineHeight: 1.15, letterSpacing: "-0.02em" },
+    h3: { fontWeight: 700, lineHeight: 1.2, letterSpacing: "-0.01em" },
+    h4: { fontWeight: 700, lineHeight: 1.2, letterSpacing: "-0.01em" },
+    h5: { fontWeight: 600, letterSpacing: "-0.01em" },
     h6: { fontWeight: 600 },
     button: { fontWeight: 700, textTransform: "none" },
+    overline: { letterSpacing: "0.12em", fontWeight: 600 },
+    caption: { letterSpacing: "0.04em" },
   },
   shape: {
-    borderRadius: 12,
+    borderRadius: 4,
   },
   components: {
     MuiAppBar: {
       styleOverrides: {
         root: {
-          backgroundColor: "#0b0c0c",
-          color: "#e9eaec",
+          backgroundColor: "rgba(19, 19, 19, 0.85)",
+          backdropFilter: "blur(12px)",
+          color: "#f5f5f5",
+          borderBottom: "1px solid rgba(245, 245, 245, 0.12)",
+          boxShadow: "none",
         },
       },
     },
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 999,
+          borderRadius: 4,
           paddingInline: 18,
+        },
+        contained: {
+          boxShadow: "none",
+          "&:hover": {
+            boxShadow: "none",
+          },
         },
       },
     },
@@ -92,10 +103,27 @@ const theme = createTheme({
         },
       },
     },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          border: "1px solid rgba(245, 245, 245, 0.12)",
+          boxShadow: "none",
+        },
+      },
+    },
     MuiChip: {
       styleOverrides: {
         root: {
-          borderRadius: 999,
+          borderRadius: 4,
+        },
+      },
+    },
+    MuiOutlinedInput: {
+      styleOverrides: {
+        root: {
+          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+            borderColor: "#e4b61a",
+          },
         },
       },
     },

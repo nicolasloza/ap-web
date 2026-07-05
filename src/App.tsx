@@ -15,7 +15,7 @@ export default function App() {
   const isDesktop = useMediaQuery(theme.breakpoints.up("sm"));
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const appBarOffset = isDesktop ? 64 : 56;
+  const appBarOffset = isDesktop ? 72 : 56;
 
   const openDrawer = () => setDrawerOpen(true);
   const closeDrawer = () => setDrawerOpen(false);
@@ -30,9 +30,19 @@ export default function App() {
     closeDrawer();
   };
 
+  const isAdminRoute = pathname.startsWith("/admin");
+
+  if (isAdminRoute) {
+    return (
+      <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
+        <AppRoutes />
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh", bgcolor: "background.default" }}>
-      <MainAppBar onOpenDrawer={openDrawer} />
+      <MainAppBar pathname={pathname} onOpenDrawer={openDrawer} onOpenLogin={openLoginModal} />
 
       <NavigationDrawer
         open={drawerOpen}

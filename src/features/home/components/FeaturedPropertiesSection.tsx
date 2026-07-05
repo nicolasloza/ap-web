@@ -36,7 +36,7 @@ export default function FeaturedPropertiesSection({ items, loading, error }: Fea
                 sx={{ mb: 2, justifyContent: "space-between", alignItems: { xs: "flex-start", sm: "baseline" } }}
             >
                 <Typography component="h2" variant="h4" sx={{ fontWeight: 700, fontSize: { xs: "1.6rem", sm: "2rem" } }}>
-                    Propiedades destacadas
+                    Propiedades <Box component="span" sx={{ color: "primary.main" }}>destacadas</Box>
                 </Typography>
                 <Button component={RouterLink} to="/propiedades">
                     Ver todas

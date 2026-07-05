@@ -1,16 +1,23 @@
 import { Box, Container, Divider, Grid, Paper, Stack, Typography } from "@mui/material";
 import ContactInfoBlock from "../components/company/ContactInfoBlock";
 import InquiryForm from "../components/forms/InquiryForm";
+import { FONT_MONO } from "../theme/tokens";
 
 export default function AppraisalsPage() {
   return (
-    <Box sx={{ bgcolor: "background.default", minHeight: "70vh", py: { xs: 2.5, sm: 4, md: 6 } }}>
+    <Box sx={{ bgcolor: "background.default", minHeight: "70vh", py: { xs: 3, sm: 4, md: 6 } }}>
       <Container maxWidth="lg">
         <Stack spacing={{ xs: 3, md: 5 }}>
 
           {/* Header */}
           <Box>
-            <Typography variant="h4" component="h1" sx={{ fontWeight: 700, mb: 1 }}>
+            <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 1.5 }}>
+              <Divider sx={{ width: 24, borderBottomWidth: 2, borderColor: "primary.main" }} />
+              <Typography sx={{ fontFamily: FONT_MONO, fontSize: 12, letterSpacing: "0.1em", color: "primary.main" }}>
+                VALUACIONES
+              </Typography>
+            </Stack>
+            <Typography variant="h3" component="h1" sx={{ fontWeight: 700, mb: 1, fontSize: { xs: "2rem", sm: "2.5rem" } }}>
               Tasaciones
             </Typography>
             <Typography color="text.secondary" sx={{ maxWidth: 560 }}>
@@ -46,7 +53,7 @@ export default function AppraisalsPage() {
 
             {/* Columna derecha — Formulario */}
             <Grid size={{ xs: 12, md: 7 }}>
-              <Paper elevation={2} sx={{ p: { xs: 2.5, sm: 3 }, borderRadius: 2 }}>
+              <Paper variant="outlined" sx={{ p: { xs: 2.5, sm: 3 } }}>
                 <Typography variant="h6" sx={{ fontWeight: 600, mb: 2.5 }}>
                   Solicitá tu tasación
                 </Typography>

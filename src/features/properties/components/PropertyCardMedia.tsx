@@ -11,7 +11,7 @@ export default function PropertyCardMedia({ property, height }: PropertyCardMedi
   const thumb = getPropertyThumb(property);
 
   if (!thumb) {
-    return <Box sx={{ height, bgcolor: "action.hover" }} role="img" aria-label="Sin imagen" />;
+    return <Box sx={{ height, bgcolor: "background.default" }} role="img" aria-label="Sin imagen" />;
   }
 
   return (

@@ -1,11 +1,13 @@
 import { ArrowForward } from "@mui/icons-material";
 import { Box, Card, CardActionArea, CardContent, Grid, Stack, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import BackOfficeLayout from "../components/layout/BackOfficeLayout";
 
 export default function BackOfficePage() {
   const navigate = useNavigate();
 
   return (
+    <BackOfficeLayout>
     <Box sx={{ p: { xs: 2, sm: 3 } }}>
       <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, fontSize: { xs: "1.4rem", sm: "1.6rem" } }} component="h1">
         Back office
@@ -51,5 +53,6 @@ export default function BackOfficePage() {
         </Grid>
       </Grid>
     </Box>
+    </BackOfficeLayout>
   );
 }

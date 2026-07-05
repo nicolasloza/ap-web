@@ -16,65 +16,78 @@ import {
   Typography,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import EmailIcon from "@mui/icons-material/Email";
 import BedOutlinedIcon from "@mui/icons-material/BedOutlined";
 import SquareFootIcon from "@mui/icons-material/SquareFoot";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import PageErrorState from "../components/feedback/PageErrorState";
-import { fetchPropertyById } from "../api/client";
+import InquiryForm from "../components/forms/InquiryForm";
+import PropertyGalleryMosaic from "../features/properties/components/PropertyGalleryMosaic";
+import PropertyImageLightbox from "../features/properties/components/PropertyImageLightbox";
+import PropertyListCard from "../features/properties/components/PropertyListCard";
+import { fetchPropertyById, fetchPropertyList } from "../api/client";
+import { STATUS_CHIP_CONFIG } from "../features/properties/constants/propertyStatus";
 import { formatOperation, formatPrice } from "../lib/format";
+import { buildReferenceCode, formatSurface } from "../lib/propertyDisplay";
 import { BRAND } from "../features/company/constants/contactInfo";
+import { FONT_MONO } from "../theme/tokens";
 
 function PropertyDetailSkeleton() {
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 2.5, sm: 3 } }}>
       <Skeleton width={220} height={24} sx={{ mb: 2 }} />
-      <Stack direction="row" spacing={1} sx={{ mb: 2.5 }}>
-        <Skeleton variant="rounded" width={80} height={28} />
-        <Skeleton variant="rounded" width={100} height={28} />
-      </Stack>
+      <Skeleton variant="rectangular" width="100%" height={420} sx={{ borderRadius: 1, mb: 3 }} />
       <Grid container spacing={{ xs: 3, md: 5 }}>
         <Grid size={{ xs: 12, md: 7 }}>
-          <Skeleton variant="rectangular" width="100%" height={380} sx={{ borderRadius: 1, mb: 1 }} />
-          <Stack direction="row" spacing={1}>
-            {[1, 2, 3].map((n) => (
-              <Skeleton key={n} variant="rectangular" width={80} height={60} sx={{ borderRadius: 0.75 }} />
-            ))}
-          </Stack>
-          <Skeleton width="60%" height={32} sx={{ mt: 3 }} />
+          <Skeleton width="60%" height={32} />
           <Skeleton width="100%" height={20} />
           <Skeleton width="100%" height={20} />
           <Skeleton width="75%" height={20} />
         </Grid>
         <Grid size={{ xs: 12, md: 5 }}>
-          <Skeleton width="85%" height={36} sx={{ mb: 0.5 }} />
-          <Skeleton width="55%" height={48} sx={{ mb: 2.5 }} />
-          <Divider sx={{ mb: 2 }} />
-          {[1, 2, 3, 4].map((n) => (
-            <Stack key={n} direction="row" spacing={1} sx={{ alignItems: "center", mb: 1.5 }}>
-              <Skeleton variant="circular" width={20} height={20} />
-              <Skeleton width="70%" height={20} />
-            </Stack>
-          ))}
-          <Divider sx={{ mb: 2.5 }} />
-          <Skeleton width="60%" height={20} sx={{ mb: 1.5 }} />
-          <Skeleton variant="rectangular" width="100%" height={44} sx={{ borderRadius: 1 }} />
+          <Skeleton variant="rectangular" width="100%" height={320} sx={{ borderRadius: 1 }} />
         </Grid>
       </Grid>
     </Container>
   );
 }
 
+function SpecItem({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+  return (
+    <Stack spacing={0.5} sx={{ alignItems: { xs: "flex-start", sm: "center" }, minWidth: 0 }}>
+      <Stack direction="row" spacing={0.75} sx={{ alignItems: "center", color: "primary.main" }}>
+        {icon}
+        <Typography
+          sx={{ fontFamily: FONT_MONO, fontSize: 11, letterSpacing: "0.08em", color: "text.secondary" }}
+        >
+          {label}
+        </Typography>
+      </Stack>
+      <Typography sx={{ fontWeight: 700 }} noWrap>
+        {value}
+      </Typography>
+    </Stack>
+  );
+}
+
 export default function PropertyDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const [selectedImg, setSelectedImg] = useState(0);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const { data: p, isLoading, error } = useQuery({
     queryKey: ["property", id],
     queryFn: () => fetchPropertyById(id!).then((r) => r.data),
     enabled: Boolean(id),
     retry: (_, err) => !(err instanceof Error && err.message === "not_found"),
+  });
+
+  const { data: similar = [] } = useQuery({
+    queryKey: ["property", id, "similar", p?.type],
+    queryFn: () =>
+      fetchPropertyList(1, 4, { type: p!.type }).then((r) =>
+        r.data.filter((item) => item.id !== p!.id).slice(0, 3)
+      ),
+    enabled: Boolean(p),
   });
 
   useEffect(() => {
@@ -113,141 +126,165 @@ export default function PropertyDetailPage() {
   }
 
   const specs = [
-    { icon: <LocationOnOutlinedIcon fontSize="small" />, label: `${p.neighborhood}, ${p.city}` },
-    { icon: <BedOutlinedIcon fontSize="small" />, label: `${p.rooms} ambiente${p.rooms !== 1 ? "s" : ""}` },
-    { icon: <SquareFootIcon fontSize="small" />, label: `${p.coveredM2} m² cubiertos` },
-    ...(p.totalM2 ? [{ icon: <SquareFootIcon fontSize="small" />, label: `${p.totalM2} m² totales` }] : []),
-    { icon: <HomeOutlinedIcon fontSize="small" />, label: p.type },
+    { icon: <SquareFootIcon sx={{ fontSize: 16 }} />, label: "AREA TOTAL", value: formatSurface(p) },
+    { icon: <BedOutlinedIcon sx={{ fontSize: 16 }} />, label: "AMBIENTES", value: `${p.rooms}` },
+    { icon: <HomeOutlinedIcon sx={{ fontSize: 16 }} />, label: "TIPO", value: p.type },
   ];
 
   return (
-    <Box sx={{ bgcolor: "background.default", minHeight: "70vh", py: { xs: 2.5, sm: 3 } }}>
-    <Container maxWidth="lg">
-      <Breadcrumbs sx={{ mb: 2 }} separator="›">
-        <Link component={RouterLink} to="/propiedades" color="inherit" underline="hover">
-          Propiedades
-        </Link>
-        <Typography color="text.primary" noWrap sx={{ maxWidth: { xs: 180, sm: 400 } }}>
-          {p.title}
-        </Typography>
-      </Breadcrumbs>
-
-      <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap", mb: 2.5 }}>
-        <Chip label={formatOperation(p.operation)} color="primary" />
-        <Chip label={p.type} variant="outlined" />
-      </Stack>
-
-      <Grid container spacing={{ xs: 3, md: 5 }} sx={{ alignItems: "flex-start" }}>
-
-        {/* Columna izquierda — Galería + Descripción */}
-        <Grid size={{ xs: 12, md: 7 }}>
-          {p.images.length > 0 ? (
-            <>
-              <Box
-                component="img"
-                src={p.images[selectedImg]?.url}
-                alt={p.title}
-                sx={{
-                  width: "100%",
-                  height: { xs: 240, sm: 360, md: 420 },
-                  objectFit: "cover",
-                  borderRadius: 1,
-                  display: "block",
-                  mb: 1,
-                }}
-              />
-              {p.images.length > 1 && (
-                <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>
-                  {p.images.map((img, i) => (
-                    <Box
-                      key={img.id}
-                      component="img"
-                      src={img.url}
-                      alt={`Foto ${i + 1}`}
-                      onClick={() => setSelectedImg(i)}
-                      sx={{
-                        width: 80,
-                        height: 60,
-                        objectFit: "cover",
-                        borderRadius: 0.75,
-                        cursor: "pointer",
-                        border: "2px solid",
-                        borderColor: selectedImg === i ? "primary.main" : "transparent",
-                        opacity: selectedImg === i ? 1 : 0.6,
-                        transition: "opacity 0.15s, border-color 0.15s",
-                        "&:hover": { opacity: 1 },
-                      }}
-                    />
-                  ))}
-                </Stack>
-              )}
-            </>
-          ) : (
-            <Box
-              sx={{
-                width: "100%",
-                height: { xs: 240, sm: 360 },
-                bgcolor: "grey.100",
-                borderRadius: 1,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Typography color="text.disabled">Sin imágenes disponibles</Typography>
-            </Box>
-          )}
-
-          <Typography variant="h6" sx={{ mt: 3, mb: 1, fontWeight: 600 }}>
-            Descripción
-          </Typography>
-          <Typography variant="body1" sx={{ whiteSpace: "pre-line", lineHeight: 1.8, color: "text.secondary" }}>
-            {p.description}
-          </Typography>
-        </Grid>
-
-        {/* Columna derecha — Info sticky + CTA */}
-        <Grid size={{ xs: 12, md: 5 }}>
-          <Paper elevation={2} sx={{ position: { md: "sticky" }, top: { md: 88 }, p: { xs: 2.5, sm: 3 }, borderRadius: 2 }}>
-            <Typography variant="h5" component="h1" sx={{ fontWeight: 700, lineHeight: 1.3, mb: 0.5 }}>
+    <Box sx={{ bgcolor: "background.default", minHeight: "70vh" }}>
+      {/* Hero */}
+      <Box sx={{ position: "relative" }}>
+        {p.images.length > 0 ? (
+          <Box
+            component="img"
+            src={p.images[0]?.url}
+            alt={p.title}
+            sx={{
+              width: "100%",
+              height: { xs: 320, sm: 440, md: 520 },
+              objectFit: "cover",
+              display: "block",
+            }}
+          />
+        ) : (
+          <Box sx={{ width: "100%", height: { xs: 320, sm: 440, md: 520 }, bgcolor: "background.paper" }} />
+        )}
+        <Box
+          sx={{
+            position: "absolute",
+            inset: 0,
+            background: "linear-gradient(180deg, rgba(19,19,19,0) 40%, rgba(19,19,19,0.92) 100%)",
+          }}
+        />
+        <Container maxWidth="lg" sx={{ position: "absolute", left: 0, right: 0, bottom: 0, pb: 3 }}>
+          <Breadcrumbs sx={{ mb: 1.5 }} separator="›">
+            <Link component={RouterLink} to="/propiedades" color="inherit" underline="hover">
+              Propiedades
+            </Link>
+            <Typography color="text.primary" noWrap sx={{ maxWidth: { xs: 180, sm: 400 } }}>
               {p.title}
             </Typography>
-            <Typography variant="h4" color="primary" sx={{ fontWeight: 800, mb: 2.5 }}>
-              {formatPrice(p.price, p.currency)}
+          </Breadcrumbs>
+          <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap", mb: 1.5 }}>
+            <Chip label={formatOperation(p.operation)} color="primary" size="small" />
+            <Chip label={p.type} variant="outlined" size="small" />
+            {p.status !== "available" ? (
+              <Chip
+                label={STATUS_CHIP_CONFIG[p.status].label}
+                size="small"
+                sx={{
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  bgcolor: `${STATUS_CHIP_CONFIG[p.status].color}1a`,
+                  color: STATUS_CHIP_CONFIG[p.status].color,
+                  border: 1,
+                  borderColor: STATUS_CHIP_CONFIG[p.status].color,
+                }}
+              />
+            ) : null}
+          </Stack>
+          <Typography variant="h4" component="h1" sx={{ fontWeight: 700, mb: 0.5 }}>
+            {p.title}
+          </Typography>
+          <Stack direction="row" spacing={0.75} sx={{ alignItems: "center", color: "text.secondary", mb: 1 }}>
+            <LocationOnOutlinedIcon sx={{ fontSize: 17 }} />
+            <Typography>{p.neighborhood}, {p.city}</Typography>
+          </Stack>
+          <Typography variant="h4" color="primary" sx={{ fontWeight: 800 }}>
+            {formatPrice(p.price, p.currency)}
+          </Typography>
+        </Container>
+      </Box>
+
+      <Container maxWidth="lg" sx={{ py: { xs: 3, sm: 4 } }}>
+        {/* Specs strip */}
+        <Paper
+          variant="outlined"
+          sx={{
+            px: { xs: 2, sm: 3 },
+            py: 2,
+            mb: { xs: 3, md: 5 },
+            display: "flex",
+            flexWrap: "wrap",
+            gap: { xs: 2.5, sm: 4 },
+            justifyContent: { xs: "flex-start", sm: "space-around" },
+          }}
+        >
+          {specs.map((spec) => (
+            <SpecItem key={spec.label} {...spec} />
+          ))}
+          <SpecItem
+            icon={<span style={{ fontSize: 14 }}>#</span>}
+            label="REFERENCIA"
+            value={buildReferenceCode(p)}
+          />
+        </Paper>
+
+        <PropertyGalleryMosaic images={p.images} alt={p.title} onImageClick={setLightboxIndex} />
+
+        <Grid container spacing={{ xs: 3, md: 5 }} sx={{ alignItems: "flex-start" }}>
+          {/* Columna izquierda — Descripción */}
+          <Grid size={{ xs: 12, md: 7 }}>
+            <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
+              Descripción
             </Typography>
-
-            <Divider sx={{ mb: 2 }} />
-
-            <Stack spacing={1.75} sx={{ mb: 3 }}>
-              {specs.map((spec, i) => (
-                <Stack key={i} direction="row" spacing={1.25} sx={{ alignItems: "center" }}>
-                  <Box sx={{ color: "primary.main", display: "flex", flexShrink: 0 }}>{spec.icon}</Box>
-                  <Typography variant="body2">{spec.label}</Typography>
-                </Stack>
-              ))}
-            </Stack>
-
-            <Divider sx={{ mb: 2.5 }} />
-
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-              ¿Te interesa esta propiedad?
+            <Typography variant="body1" sx={{ whiteSpace: "pre-line", lineHeight: 1.8, color: "text.secondary" }}>
+              {p.description}
             </Typography>
-            <Button
-              component={RouterLink}
-              to="/contacto"
-              variant="contained"
-              color="primary"
-              size="large"
-              startIcon={<EmailIcon />}
-              fullWidth
-            >
-              Consultar propiedad
-            </Button>
-          </Paper>
+          </Grid>
+
+          {/* Columna derecha — Formulario de consulta */}
+          <Grid size={{ xs: 12, md: 5 }}>
+            <Paper variant="outlined" sx={{ position: { md: "sticky" }, top: { md: 88 }, p: { xs: 2.5, sm: 3 } }}>
+              <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
+                Consulta privada
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2.5 }}>
+                Coordiná una visita o pedí más información sobre esta propiedad.
+              </Typography>
+              <InquiryForm
+                mode="contact"
+                submitLabel="Enviar consulta"
+                successMessage="Consulta enviada. Te contactaremos a la brevedad."
+              />
+            </Paper>
+          </Grid>
         </Grid>
 
-      </Grid>
-    </Container>
+        {/* Propiedades similares */}
+        {similar.length > 0 ? (
+          <Box sx={{ mt: { xs: 5, md: 7 } }}>
+            <Divider sx={{ mb: { xs: 3, md: 4 } }} />
+            <Stack
+              direction="row"
+              sx={{ justifyContent: "space-between", alignItems: "baseline", mb: 2.5 }}
+            >
+              <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                Propiedades similares
+              </Typography>
+              <Button component={RouterLink} to="/propiedades">
+                Ver todas
+              </Button>
+            </Stack>
+            <Grid container spacing={{ xs: 1.5, sm: 2 }}>
+              {similar.map((item) => (
+                <Grid key={item.id} size={{ xs: 12, sm: 6, md: 4 }}>
+                  <PropertyListCard property={item} />
+                </Grid>
+              ))}
+            </Grid>
+          </Box>
+        ) : null}
+      </Container>
+
+      <PropertyImageLightbox
+        images={p.images}
+        open={lightboxIndex !== null}
+        initialIndex={lightboxIndex ?? 0}
+        onClose={() => setLightboxIndex(null)}
+        alt={p.title}
+      />
     </Box>
   );
 }

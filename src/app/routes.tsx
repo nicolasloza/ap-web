@@ -1,6 +1,7 @@
 import { Route, Routes } from "react-router-dom";
 import BackOfficePage from "../pages/BackOfficePage";
 import BackOfficePropertiesPage from "../pages/BackOfficePropertiesPage";
+import BackOfficePropertyFormPage from "../pages/BackOfficePropertyFormPage";
 import BackOfficeUsersPage from "../pages/BackOfficeUsersPage";
 import ContactPage from "../pages/ContactPage";
 import HomePage from "../pages/HomePage";
@@ -20,6 +21,8 @@ export default function AppRoutes() {
             <Route path="/contacto" element={<ContactPage />} />
             <Route path="/admin" element={<BackOfficePage />} />
             <Route path="/admin/propiedades" element={<BackOfficePropertiesPage />} />
+            <Route path="/admin/propiedades/nueva" element={<BackOfficePropertyFormPage />} />
+            <Route path="/admin/propiedades/:id/editar" element={<BackOfficePropertyFormPage />} />
             <Route path="/admin/usuarios" element={<BackOfficeUsersPage />} />
         </Routes>
     );

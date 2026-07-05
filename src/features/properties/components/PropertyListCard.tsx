@@ -1,32 +1,38 @@
-import HotelOutlinedIcon from "@mui/icons-material/HotelOutlined";
-import StraightenRoundedIcon from "@mui/icons-material/StraightenRounded";
-import { Box, Card, CardActionArea, CardContent, CardMedia, Stack, Typography } from "@mui/material";
+import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
+import { Box, Card, CardActionArea, CardContent, CardMedia, Chip, Divider, Stack, Typography } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
-import { formatPrice } from "../../../lib/format";
-import {
-  buildContextLine,
-  buildImageAlt,
-  formatSurface,
-  getPropertyThumb,
-} from "../../../lib/propertyDisplay";
+import { formatOperation, formatPrice } from "../../../lib/format";
+import { buildImageAlt, formatSurface, getPropertyThumb } from "../../../lib/propertyDisplay";
+import { FONT_MONO } from "../../../theme/tokens";
 import type { Property } from "../../../types/property";
 
 type PropertyListCardProps = {
   property: Property;
 };
 
+function SpecItem({ label, value }: { label: string; value: string }) {
+  return (
+    <Stack spacing={0.25} sx={{ minWidth: 0 }}>
+      <Typography
+        sx={{ fontFamily: FONT_MONO, fontSize: 11, letterSpacing: "0.08em", color: "text.secondary" }}
+      >
+        {label}
+      </Typography>
+      <Typography sx={{ fontWeight: 700 }} noWrap>
+        {value}
+      </Typography>
+    </Stack>
+  );
+}
+
 export default function PropertyListCard({ property }: PropertyListCardProps) {
   const thumb = getPropertyThumb(property);
-  const contextLine = buildContextLine(property);
   const surfaceLabel = formatSurface(property);
   const priceLabel = formatPrice(property.price, property.currency);
 
   return (
-    <Card
-      variant="outlined"
-      sx={{ height: "100%", borderColor: "divider", boxShadow: "0 1px 2px rgba(0, 0, 0, 0.06)" }}
-    >
-      <CardActionArea component={RouterLink} to={`/propiedades/${property.id}`}>
+    <Card variant="outlined" sx={{ height: "100%", borderColor: "divider" }}>
+      <CardActionArea component={RouterLink} to={`/propiedades/${property.id}`} sx={{ height: "100%", display: "block" }}>
         <Box sx={{ position: "relative" }}>
           {thumb ? (
             <CardMedia
@@ -37,53 +43,40 @@ export default function PropertyListCard({ property }: PropertyListCardProps) {
               sx={{ objectFit: "cover", height: { xs: 190, sm: 220 } }}
             />
           ) : (
-            <Box sx={{ height: { xs: 190, sm: 220 }, bgcolor: "action.hover" }} role="img" aria-label="Sin imagen" />
+            <Box sx={{ height: { xs: 190, sm: 220 }, bgcolor: "background.default" }} role="img" aria-label="Sin imagen" />
           )}
-          <Stack
-            direction="row"
-            spacing={1.25}
+          <Chip
+            label={formatOperation(property.operation)}
+            size="small"
             sx={{
               position: "absolute",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              px: 1.25,
-              py: 0.75,
-              color: "common.white",
-              bgcolor: "rgba(35, 35, 35, 0.7)",
-              alignItems: "center",
+              top: 12,
+              left: 12,
+              bgcolor: "primary.main",
+              color: "primary.contrastText",
+              fontFamily: FONT_MONO,
+              fontSize: 11,
+              fontWeight: 600,
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
+              height: 24,
             }}
-          >
-            <Stack direction="row" spacing={0.5} sx={{ alignItems: "center", minWidth: 0 }}>
-              <StraightenRoundedIcon sx={{ fontSize: 17 }} />
-              <Typography variant="caption" sx={{ fontWeight: 600 }} noWrap>
-                {surfaceLabel}
-              </Typography>
-            </Stack>
-            {property.rooms > 0 ? (
-              <Stack direction="row" spacing={0.5} sx={{ alignItems: "center", minWidth: 0 }}>
-                <Typography variant="caption" sx={{ opacity: 0.8 }}>
-                  -
-                </Typography>
-                <HotelOutlinedIcon sx={{ fontSize: 17 }} />
-                <Typography variant="caption" sx={{ fontWeight: 600 }} noWrap>
-                  {property.rooms} amb.
-                </Typography>
-              </Stack>
-            ) : null}
-          </Stack>
+          />
         </Box>
-        <CardContent sx={{ px: 1.5, py: 1.25, "&:last-child": { pb: 1.25 } }}>
-          <Typography variant="body2" color="text.secondary" noWrap sx={{ mb: 0.25 }}>
-            {contextLine}
-          </Typography>
+        <CardContent sx={{ px: 2, py: 1.75, "&:last-child": { pb: 1.75 } }}>
+          <Stack direction="row" spacing={0.5} sx={{ alignItems: "center", mb: 0.5, color: "text.secondary" }}>
+            <LocationOnOutlinedIcon sx={{ fontSize: 15 }} />
+            <Typography variant="caption" noWrap>
+              {property.neighborhood}, {property.city}
+            </Typography>
+          </Stack>
           <Typography
             variant="h6"
             component="h2"
             sx={{
               fontWeight: 700,
               lineHeight: 1.25,
-              mb: 1.25,
+              mb: 1.5,
               display: "-webkit-box",
               overflow: "hidden",
               WebkitLineClamp: 2,
@@ -93,11 +86,20 @@ export default function PropertyListCard({ property }: PropertyListCardProps) {
           >
             {property.title || `${property.neighborhood}, ${property.city}`}
           </Typography>
-          <Stack direction="row" sx={{ alignItems: "baseline", justifyContent: "space-between", gap: 1 }}>
-            <Typography variant="h6" sx={{ fontWeight: 800 }}>
-              {priceLabel}
-            </Typography>
+
+          <Stack
+            direction="row"
+            divider={<Divider orientation="vertical" flexItem sx={{ borderColor: "divider" }} />}
+            spacing={2}
+            sx={{ py: 1.5, mb: 1.5, borderTop: 1, borderBottom: 1, borderColor: "divider" }}
+          >
+            <SpecItem label="AREA" value={surfaceLabel} />
+            {property.rooms > 0 ? <SpecItem label="AMB." value={String(property.rooms)} /> : null}
           </Stack>
+
+          <Typography variant="h6" color="primary" sx={{ fontWeight: 800 }}>
+            {priceLabel}
+          </Typography>
         </CardContent>
       </CardActionArea>
     </Card>

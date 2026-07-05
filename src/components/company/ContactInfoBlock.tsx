@@ -18,7 +18,7 @@ export default function ContactInfoBlock({ compact = false }: ContactInfoBlockPr
           Casa Central
         </Typography>
         <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap" }}>
-          <PhoneIcon sx={{ color: "#17b5ff", fontSize: 18 }} />
+          <PhoneIcon sx={{ color: "primary.main", fontSize: 18 }} />
           <Typography sx={{ fontSize: "1rem" }}>{FORMATTED_PHONES}</Typography>
         </Stack>
       </Stack>

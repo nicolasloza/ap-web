@@ -1,7 +1,8 @@
-import { Box, Button, Card, CardMedia, Chip, IconButton, Stack, Typography } from "@mui/material";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import DeleteIcon from "@mui/icons-material/Delete";
+import { Box, Button, Grid, IconButton, Stack, Tooltip, Typography } from "@mui/material";
+import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
+import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import { FONT_MONO } from "../../../theme/tokens";
 import type { ImageEntry } from "./PropertyForm";
 
 type ImageUploaderProps = {
@@ -23,7 +24,7 @@ export function ImageUploader({
 }: ImageUploaderProps) {
   return (
     <Stack spacing={1.5}>
-      <Button component="label" variant="outlined" disabled={disabled || images.length >= maxImages}>
+      <Button component="label" variant="outlined" fullWidth disabled={disabled || images.length >= maxImages}>
         Agregar imágenes (JPG/PNG)
         <input
           hidden
@@ -38,60 +39,103 @@ export function ImageUploader({
           }}
         />
       </Button>
-      <Typography variant="caption" color="text.secondary">
-        {images.length}/{maxImages} imágenes · se suben a Cloudinary recién al guardar
+      <Typography sx={{ fontFamily: FONT_MONO, fontSize: 11, color: "text.secondary" }}>
+        {images.length}/{maxImages} imágenes · se suben recién al guardar
       </Typography>
 
-      <Stack spacing={1}>
-        {images.map((image, index) => (
-          <Card
-            key={image.status === "uploaded" ? `${image.publicId}-${index}` : image.previewUrl}
-            variant="outlined"
-            sx={{ p: 1 }}
-          >
-            <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
-              <CardMedia
-                component="img"
-                image={image.status === "uploaded" ? image.url : image.previewUrl}
-                alt={`Imagen ${index + 1}`}
-                sx={{ width: 96, height: 72 }}
-              />
-              <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography variant="body2" noWrap>
-                  {image.status === "uploaded" ? image.publicId || "Sin publicId" : image.file.name}
+      {images.length > 0 ? (
+        <Grid container spacing={1}>
+          {images.map((image, index) => (
+            <Grid key={image.status === "uploaded" ? `${image.publicId}-${index}` : image.previewUrl} size={6}>
+              <Box
+                sx={{
+                  position: "relative",
+                  aspectRatio: "4 / 3",
+                  borderRadius: 0.75,
+                  overflow: "hidden",
+                  border: 1,
+                  borderColor: "divider",
+                  bgcolor: "background.default",
+                }}
+              >
+                <Box
+                  component="img"
+                  src={image.status === "uploaded" ? image.url : image.previewUrl}
+                  alt={`Imagen ${index + 1}`}
+                  sx={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                />
+                <Typography
+                  sx={{
+                    position: "absolute",
+                    top: 4,
+                    left: 4,
+                    px: 0.75,
+                    py: 0.125,
+                    borderRadius: 0.5,
+                    bgcolor: "rgba(19, 19, 19, 0.75)",
+                    color: "primary.main",
+                    fontFamily: FONT_MONO,
+                    fontSize: 10,
+                  }}
+                >
+                  {index + 1}
                 </Typography>
-                <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-                  <Typography variant="caption" color="text.secondary">
-                    Orden: {index + 1}
-                  </Typography>
-                  {image.status === "pending" ? (
-                    <Chip label="Pendiente de subir" size="small" color="warning" variant="outlined" />
-                  ) : null}
+                <IconButton
+                  size="small"
+                  aria-label="Eliminar imagen"
+                  disabled={disabled}
+                  onClick={() => onRemoveImage(index)}
+                  sx={{
+                    position: "absolute",
+                    top: 2,
+                    right: 2,
+                    p: 0.375,
+                    bgcolor: "rgba(19, 19, 19, 0.75)",
+                    "&:hover": { bgcolor: "rgba(19, 19, 19, 0.9)" },
+                  }}
+                >
+                  <CloseRoundedIcon sx={{ fontSize: 14, color: "common.white" }} />
+                </IconButton>
+                <Stack
+                  direction="row"
+                  sx={{
+                    position: "absolute",
+                    bottom: 2,
+                    right: 2,
+                  }}
+                >
+                  <Tooltip title="Mover antes">
+                    <span>
+                      <IconButton
+                        size="small"
+                        aria-label="Mover antes"
+                        disabled={disabled || index === 0}
+                        onClick={() => onMoveImage(index, index - 1)}
+                        sx={{ p: 0.375, bgcolor: "rgba(19, 19, 19, 0.75)", "&:hover": { bgcolor: "rgba(19, 19, 19, 0.9)" } }}
+                      >
+                        <ArrowBackRoundedIcon sx={{ fontSize: 14, color: "common.white" }} />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                  <Tooltip title="Mover después">
+                    <span>
+                      <IconButton
+                        size="small"
+                        aria-label="Mover después"
+                        disabled={disabled || index === images.length - 1}
+                        onClick={() => onMoveImage(index, index + 1)}
+                        sx={{ p: 0.375, bgcolor: "rgba(19, 19, 19, 0.75)", "&:hover": { bgcolor: "rgba(19, 19, 19, 0.9)" } }}
+                      >
+                        <ArrowForwardRoundedIcon sx={{ fontSize: 14, color: "common.white" }} />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
                 </Stack>
               </Box>
-              <IconButton
-                size="small"
-                aria-label="Mover arriba"
-                disabled={disabled || index === 0}
-                onClick={() => onMoveImage(index, index - 1)}
-              >
-                <ArrowUpwardIcon fontSize="small" />
-              </IconButton>
-              <IconButton
-                size="small"
-                aria-label="Mover abajo"
-                disabled={disabled || index === images.length - 1}
-                onClick={() => onMoveImage(index, index + 1)}
-              >
-                <ArrowDownwardIcon fontSize="small" />
-              </IconButton>
-              <IconButton size="small" aria-label="Eliminar imagen" disabled={disabled} onClick={() => onRemoveImage(index)}>
-                <DeleteIcon fontSize="small" />
-              </IconButton>
-            </Stack>
-          </Card>
-        ))}
-      </Stack>
+            </Grid>
+          ))}
+        </Grid>
+      ) : null}
     </Stack>
   );
 }

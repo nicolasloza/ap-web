@@ -1,7 +1,46 @@
-import { Alert, Button, Divider, MenuItem, Stack, TextField, Typography } from "@mui/material";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
+import HouseSidingOutlinedIcon from "@mui/icons-material/HouseSidingOutlined";
+import PhotoCameraOutlinedIcon from "@mui/icons-material/PhotoCameraOutlined";
+import PlaceRoundedIcon from "@mui/icons-material/PlaceRounded";
+import {
+  Alert,
+  Box,
+  Button,
+  Checkbox,
+  Divider,
+  FormControlLabel,
+  Grid,
+  MenuItem,
+  Paper,
+  Stack,
+  Switch,
+  TextField,
+  ToggleButton,
+  ToggleButtonGroup,
+  Tooltip,
+  Typography,
+} from "@mui/material";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { createProperty, fetchNeighborhoods, fetchPropertyTypes, updateProperty, uploadPropertyImage } from "../../../api/client";
-import type { Currency, NeighborhoodOption, Operation, Property, PropertyImageInput, PropertyTypeOption } from "../../../types/property";
+import {
+  createProperty,
+  fetchAmenities,
+  fetchNeighborhoods,
+  fetchPropertyTypes,
+  updateProperty,
+  uploadPropertyImage,
+} from "../../../api/client";
+import type {
+  AmenityOption,
+  Currency,
+  NeighborhoodOption,
+  Operation,
+  Property,
+  PropertyImageInput,
+  PropertyStatus,
+  PropertyTypeOption,
+} from "../../../types/property";
+import { FONT_MONO } from "../../../theme/tokens";
 import { ImageUploader } from "./ImageUploader";
 
 const MAX_IMAGES = 15;
@@ -11,7 +50,7 @@ const ALLOWED_MIME_TYPES = new Set(["image/jpeg", "image/png"]);
 type PropertyFormProps = {
   selectedProperty: Property | null;
   onSaved: (property: Property) => void;
-  onCancelEdit: () => void;
+  onCancel: () => void;
 };
 
 // Una imagen ya persistida (viene del backend, con publicId real) o un archivo
@@ -24,15 +63,33 @@ type FormState = {
   operation: Operation;
   type: string;
   title: string;
+  address: string;
   description: string;
   price: string;
   currency: Currency;
   neighborhood: string;
   city: string;
   rooms: string;
+  bedrooms: string;
+  bathrooms: string;
   coveredM2: string;
   totalM2: string;
+  status: PropertyStatus;
+  active: boolean;
+  amenities: string[];
   images: ImageEntry[];
+};
+
+const STATUS_OPTIONS_BY_OPERATION: Record<Operation, readonly { value: PropertyStatus; label: string }[]> = {
+  sale: [
+    { value: "available", label: "Disponible" },
+    { value: "reserved", label: "Reservada" },
+    { value: "sold", label: "Vendida" },
+  ],
+  rent: [
+    { value: "available", label: "Disponible" },
+    { value: "rented", label: "Alquilada" },
+  ],
 };
 
 function toFormState(property: Property | null): FormState {
@@ -41,14 +98,20 @@ function toFormState(property: Property | null): FormState {
       operation: "sale",
       type: "",
       title: "",
+      address: "",
       description: "",
       price: "",
       currency: "USD",
       neighborhood: "",
       city: "CABA",
       rooms: "",
+      bedrooms: "",
+      bathrooms: "",
       coveredM2: "",
       totalM2: "",
+      status: "available",
+      active: true,
+      amenities: [],
       images: [],
     };
   }
@@ -57,14 +120,20 @@ function toFormState(property: Property | null): FormState {
     operation: property.operation,
     type: property.type,
     title: property.title,
+    address: property.address,
     description: property.description,
     price: property.price,
     currency: property.currency,
     neighborhood: property.neighborhood,
     city: "CABA",
     rooms: String(property.rooms),
+    bedrooms: String(property.bedrooms),
+    bathrooms: String(property.bathrooms),
     coveredM2: property.coveredM2,
     totalM2: property.totalM2 ?? "",
+    status: property.status,
+    active: property.active,
+    amenities: property.amenities,
     images: property.images.map((image) => ({
       status: "uploaded" as const,
       url: image.url,
@@ -114,13 +183,31 @@ async function resolveImages(images: ImageEntry[]): Promise<PropertyImageInput[]
   return resolved.map((image, index) => ({ ...image, sortOrder: index }));
 }
 
-export function PropertyForm({ selectedProperty, onSaved, onCancelEdit }: PropertyFormProps) {
+function SectionHeading({ icon, title }: { icon: React.ReactNode; title: string }) {
+  return (
+    <Stack direction="row" spacing={1} sx={{ alignItems: "center", mb: 2.5, color: "primary.main" }}>
+      {icon}
+      <Typography variant="h6" sx={{ fontWeight: 700, color: "text.primary" }}>
+        {title}
+      </Typography>
+    </Stack>
+  );
+}
+
+function FieldLabel({ children }: { children: string }) {
+  return (
+    <Typography sx={{ fontFamily: FONT_MONO, fontSize: 11, letterSpacing: "0.08em", color: "text.secondary", mb: 0.5 }}>
+      {children}
+    </Typography>
+  );
+}
+
+export function PropertyForm({ selectedProperty, onSaved, onCancel }: PropertyFormProps) {
   const [state, setState] = useState<FormState>(() => toFormState(selectedProperty));
   const [propertyTypes, setPropertyTypes] = useState<PropertyTypeOption[]>([]);
   const [neighborhoods, setNeighborhoods] = useState<NeighborhoodOption[]>([]);
-  const [saving, setSaving] = useState(false);
-  const [loadingTypes, setLoadingTypes] = useState(true);
-  const [loadingNeighborhoods, setLoadingNeighborhoods] = useState(true);
+  const [amenityOptions, setAmenityOptions] = useState<AmenityOption[]>([]);
+  const [saving, setSaving] = useState<"draft" | "publish" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const imagesRef = useRef<ImageEntry[]>(state.images);
@@ -129,8 +216,6 @@ export function PropertyForm({ selectedProperty, onSaved, onCancelEdit }: Proper
     imagesRef.current = state.images;
   }, [state.images]);
 
-  // Los previews de imágenes pendientes son object URLs locales: hay que liberarlos
-  // al desmontar o al cambiar de propiedad para no perder la memoria de esos blobs.
   useEffect(() => {
     return () => revokePendingPreviews(imagesRef.current);
   }, []);
@@ -144,69 +229,21 @@ export function PropertyForm({ selectedProperty, onSaved, onCancelEdit }: Proper
 
   useEffect(() => {
     let isMounted = true;
-
-    async function loadPropertyTypes() {
-      setLoadingTypes(true);
-      try {
-        const response = await fetchPropertyTypes();
-        if (!isMounted) {
-          return;
-        }
-        setPropertyTypes(response.data);
-      } catch (loadError) {
-        if (!isMounted) {
-          return;
-        }
-        setError(loadError instanceof Error ? loadError.message : "No se pudo cargar el catálogo de tipos");
-      } finally {
-        if (isMounted) {
-          setLoadingTypes(false);
-        }
-      }
-    }
-
-    void loadPropertyTypes();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    async function loadNeighborhoods() {
-      setLoadingNeighborhoods(true);
-      try {
-        const response = await fetchNeighborhoods();
-        if (!isMounted) {
-          return;
-        }
-        setNeighborhoods(response.data);
-      } catch (loadError) {
-        if (!isMounted) {
-          return;
-        }
-        setError(loadError instanceof Error ? loadError.message : "No se pudo cargar el catálogo de barrios");
-      } finally {
-        if (isMounted) {
-          setLoadingNeighborhoods(false);
-        }
-      }
-    }
-
-    void loadNeighborhoods();
-
+    void fetchPropertyTypes().then((r) => {
+      if (isMounted) setPropertyTypes(r.data);
+    }).catch(() => {});
+    void fetchNeighborhoods().then((r) => {
+      if (isMounted) setNeighborhoods(r.data);
+    }).catch(() => {});
+    void fetchAmenities().then((r) => {
+      if (isMounted) setAmenityOptions(r.data);
+    }).catch(() => {});
     return () => {
       isMounted = false;
     };
   }, []);
 
   const isEditing = Boolean(selectedProperty);
-  const headerText = useMemo(
-    () => (isEditing ? `Editando: ${selectedProperty?.title ?? ""}` : "Nueva propiedad"),
-    [isEditing, selectedProperty]
-  );
 
   function handleFilesSelected(files: FileList) {
     setError(null);
@@ -229,8 +266,6 @@ export function PropertyForm({ selectedProperty, onSaved, onCancelEdit }: Proper
       }
     }
 
-    // No se sube nada a Cloudinary todavía: solo se guarda un preview local.
-    // La subida real ocurre recién en handleSubmit, al confirmar el guardado.
     const newEntries: ImageEntry[] = pending.map((file) => ({
       status: "pending",
       file,
@@ -249,8 +284,16 @@ export function PropertyForm({ selectedProperty, onSaved, onCancelEdit }: Proper
     });
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  function toggleAmenity(name: string) {
+    setState((prev) => ({
+      ...prev,
+      amenities: prev.amenities.includes(name)
+        ? prev.amenities.filter((a) => a !== name)
+        : [...prev.amenities, name],
+    }));
+  }
+
+  async function submit(published: boolean) {
     setError(null);
     setSuccess(null);
 
@@ -260,19 +303,21 @@ export function PropertyForm({ selectedProperty, onSaved, onCancelEdit }: Proper
     }
 
     const rooms = Number(state.rooms);
+    const bedrooms = Number(state.bedrooms || 0);
+    const bathrooms = Number(state.bathrooms || 0);
     if (!Number.isInteger(rooms) || rooms < 0) {
       setError("El campo ambientes debe ser un entero válido.");
       return;
     }
 
-    setSaving(true);
+    setSaving(published ? "publish" : "draft");
 
     let images: PropertyImageInput[];
     try {
       images = await resolveImages(state.images);
     } catch (uploadError) {
       setError(uploadError instanceof Error ? uploadError.message : "No se pudo subir una imagen");
-      setSaving(false);
+      setSaving(null);
       return;
     }
 
@@ -280,14 +325,21 @@ export function PropertyForm({ selectedProperty, onSaved, onCancelEdit }: Proper
       operation: state.operation,
       type: state.type.trim(),
       title: state.title.trim(),
+      address: state.address.trim(),
       description: state.description.trim(),
       price: state.price.trim(),
       currency: state.currency,
       neighborhood: state.neighborhood.trim(),
       city: "CABA",
       rooms,
+      bedrooms,
+      bathrooms,
       coveredM2: state.coveredM2.trim(),
       totalM2: state.totalM2.trim() ? state.totalM2.trim() : null,
+      published,
+      active: state.active,
+      status: state.status,
+      amenities: state.amenities,
       images,
     };
 
@@ -296,130 +348,379 @@ export function PropertyForm({ selectedProperty, onSaved, onCancelEdit }: Proper
         ? await updateProperty(selectedProperty.id, payload)
         : await createProperty(payload);
       onSaved(response.data);
-      setSuccess(selectedProperty ? "Propiedad actualizada correctamente." : "Propiedad creada correctamente.");
-      revokePendingPreviews(state.images);
-      setState(selectedProperty ? toFormState(response.data) : toFormState(null));
+      setSuccess(published ? "Propiedad publicada correctamente." : "Borrador guardado correctamente.");
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : "No se pudo guardar la propiedad");
     } finally {
-      setSaving(false);
+      setSaving(null);
     }
   }
 
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    void submit(true);
+  }
+
+  const neighborhoodLabel = useMemo(() => state.neighborhood || "Seleccioná un barrio", [state.neighborhood]);
+
+  const missingFields = useMemo(() => {
+    const missing: string[] = [];
+    if (!state.title.trim()) missing.push("Título de la propiedad");
+    if (!state.type.trim()) missing.push("Tipo de propiedad");
+    if (!state.price.trim()) missing.push("Precio");
+    if (!state.description.trim()) missing.push("Descripción");
+    if (!state.address.trim()) missing.push("Dirección");
+    if (!state.neighborhood.trim()) missing.push("Barrio");
+    if (!state.rooms.trim() || Number(state.rooms) < 0) missing.push("Ambientes");
+    if (!state.coveredM2.trim()) missing.push("M2 cubiertos");
+    if (state.images.length < 1) missing.push("Al menos una imagen");
+    return missing;
+  }, [state]);
+
   return (
-    <Stack component="form" spacing={2} onSubmit={handleSubmit}>
-      <Typography variant="h6">{headerText}</Typography>
-      {error ? <Alert severity="error">{error}</Alert> : null}
-      {success ? <Alert severity="success">{success}</Alert> : null}
+    <Box component="form" onSubmit={handleSubmit}>
+      {error ? <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert> : null}
+      {success ? <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert> : null}
 
-      <TextField
-        select
-        label="Operación"
-        value={state.operation}
-        onChange={(event) => setState((prev) => ({ ...prev, operation: event.target.value as Operation }))}
-      >
-        <MenuItem value="sale">Venta</MenuItem>
-        <MenuItem value="rent">Alquiler</MenuItem>
-      </TextField>
-      <TextField
-        select
-        label="Tipo"
-        value={state.type}
-        onChange={(event) => setState((prev) => ({ ...prev, type: event.target.value }))}
-        required
-        disabled={loadingTypes}
-        helperText={loadingTypes ? "Cargando tipos..." : undefined}
-      >
-        {propertyTypes.map((propertyType) => (
-          <MenuItem key={propertyType.id} value={propertyType.name}>
-            {propertyType.name}
-          </MenuItem>
-        ))}
-        {state.type && !propertyTypes.some((propertyType) => propertyType.name === state.type) ? (
-          <MenuItem value={state.type}>{state.type}</MenuItem>
-        ) : null}
-      </TextField>
-      <TextField label="Título" value={state.title} onChange={(event) => setState((prev) => ({ ...prev, title: event.target.value }))} required />
-      <TextField
-        label="Descripción"
-        multiline
-        minRows={3}
-        value={state.description}
-        onChange={(event) => setState((prev) => ({ ...prev, description: event.target.value }))}
-        required
-      />
-      <TextField label="Precio" value={state.price} onChange={(event) => setState((prev) => ({ ...prev, price: event.target.value }))} required />
-      <TextField
-        select
-        label="Moneda"
-        value={state.currency}
-        onChange={(event) => setState((prev) => ({ ...prev, currency: event.target.value as Currency }))}
-      >
-        <MenuItem value="USD">USD</MenuItem>
-        <MenuItem value="ARS">ARS</MenuItem>
-      </TextField>
-      <TextField
-        select
-        label="Barrio"
-        value={state.neighborhood}
-        onChange={(event) => setState((prev) => ({ ...prev, neighborhood: event.target.value }))}
-        required
-        disabled={loadingNeighborhoods}
-        helperText={loadingNeighborhoods ? "Cargando barrios..." : undefined}
-      >
-        {neighborhoods.map((neighborhood) => (
-          <MenuItem key={neighborhood.id} value={neighborhood.name}>
-            {neighborhood.name}
-          </MenuItem>
-        ))}
-        {state.neighborhood && !neighborhoods.some((neighborhood) => neighborhood.name === state.neighborhood) ? (
-          <MenuItem value={state.neighborhood}>{state.neighborhood}</MenuItem>
-        ) : null}
-      </TextField>
-      <TextField label="Ciudad" value="CABA" required disabled />
-      <TextField
-        label="Ambientes"
-        type="number"
-        value={state.rooms}
-        onChange={(event) => setState((prev) => ({ ...prev, rooms: event.target.value }))}
-        required
-      />
-      <TextField
-        label="M2 cubiertos"
-        value={state.coveredM2}
-        onChange={(event) => setState((prev) => ({ ...prev, coveredM2: event.target.value }))}
-        required
-      />
-      <TextField label="M2 totales (opcional)" value={state.totalM2} onChange={(event) => setState((prev) => ({ ...prev, totalM2: event.target.value }))} />
+      <Grid container spacing={3}>
+        {/* Columna principal */}
+        <Grid size={{ xs: 12, md: 8 }}>
+          <Stack spacing={3}>
+            <Paper variant="outlined" sx={{ p: { xs: 2.5, sm: 3 } }}>
+              <SectionHeading icon={<InfoOutlinedIcon />} title="Información General" />
+              <Stack spacing={2}>
+                <Box>
+                  <FieldLabel>Título de la propiedad</FieldLabel>
+                  <TextField
+                    value={state.title}
+                    onChange={(e) => setState((prev) => ({ ...prev, title: e.target.value }))}
+                    placeholder="Ej: Departamento Moderno en Recoleta"
+                    fullWidth
+                    required
+                  />
+                </Box>
+                <Grid container spacing={2}>
+                  <Grid size={{ xs: 12, sm: 4 }}>
+                    <FieldLabel>Tipo de operación</FieldLabel>
+                    <TextField
+                      select
+                      fullWidth
+                      value={state.operation}
+                      onChange={(e) => {
+                        const operation = e.target.value as Operation;
+                        setState((prev) => ({
+                          ...prev,
+                          operation,
+                          status: STATUS_OPTIONS_BY_OPERATION[operation].some((o) => o.value === prev.status)
+                            ? prev.status
+                            : "available",
+                        }));
+                      }}
+                    >
+                      <MenuItem value="sale">Venta</MenuItem>
+                      <MenuItem value="rent">Alquiler</MenuItem>
+                    </TextField>
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 8 }}>
+                    <FieldLabel>Precio</FieldLabel>
+                    <Stack direction="row" spacing={1}>
+                      <TextField
+                        select
+                        value={state.currency}
+                        onChange={(e) => setState((prev) => ({ ...prev, currency: e.target.value as Currency }))}
+                        sx={{ width: 100 }}
+                      >
+                        <MenuItem value="USD">USD</MenuItem>
+                        <MenuItem value="ARS">ARS</MenuItem>
+                      </TextField>
+                      <TextField
+                        value={state.price}
+                        onChange={(e) => setState((prev) => ({ ...prev, price: e.target.value }))}
+                        placeholder="0.00"
+                        fullWidth
+                        required
+                      />
+                    </Stack>
+                  </Grid>
+                </Grid>
+                <Box>
+                  <FieldLabel>Tipo de propiedad</FieldLabel>
+                  <TextField
+                    select
+                    fullWidth
+                    value={state.type}
+                    onChange={(e) => setState((prev) => ({ ...prev, type: e.target.value }))}
+                    required
+                  >
+                    {propertyTypes.map((propertyType) => (
+                      <MenuItem key={propertyType.id} value={propertyType.name}>
+                        {propertyType.name}
+                      </MenuItem>
+                    ))}
+                    {state.type && !propertyTypes.some((t) => t.name === state.type) ? (
+                      <MenuItem value={state.type}>{state.type}</MenuItem>
+                    ) : null}
+                  </TextField>
+                </Box>
+                <Box>
+                  <FieldLabel>Descripción</FieldLabel>
+                  <TextField
+                    value={state.description}
+                    onChange={(e) => setState((prev) => ({ ...prev, description: e.target.value }))}
+                    placeholder="Describí los detalles principales de la propiedad..."
+                    multiline
+                    minRows={4}
+                    fullWidth
+                    required
+                  />
+                </Box>
+                <Box>
+                  <FieldLabel>Estado comercial</FieldLabel>
+                  <ToggleButtonGroup
+                    value={state.status}
+                    exclusive
+                    onChange={(_e, value: PropertyStatus | null) => {
+                      if (value) setState((prev) => ({ ...prev, status: value }));
+                    }}
+                    sx={{ width: "100%" }}
+                  >
+                    {STATUS_OPTIONS_BY_OPERATION[state.operation].map((option) => (
+                      <ToggleButton key={option.value} value={option.value} sx={{ flex: 1, fontFamily: FONT_MONO, fontSize: 12 }}>
+                        {option.label}
+                      </ToggleButton>
+                    ))}
+                  </ToggleButtonGroup>
+                </Box>
+              </Stack>
+            </Paper>
 
-      <Divider />
-      <Typography variant="subtitle1">Imágenes</Typography>
-      <ImageUploader
-        images={state.images}
-        disabled={saving}
-        maxImages={MAX_IMAGES}
-        onFilesSelected={handleFilesSelected}
-        onRemoveImage={handleRemoveImage}
-        onMoveImage={(from, to) =>
-          setState((prev) => {
-            const images = prev.images.slice();
-            const [moved] = images.splice(from, 1);
-            images.splice(to, 0, moved);
-            return { ...prev, images };
-          })
-        }
-      />
+            <Paper variant="outlined" sx={{ p: { xs: 2.5, sm: 3 } }}>
+              <SectionHeading icon={<LocationOnOutlinedIcon />} title="Ubicación" />
+              <Stack spacing={2}>
+                <Grid container spacing={2}>
+                  <Grid size={{ xs: 12, sm: 8 }}>
+                    <FieldLabel>Dirección</FieldLabel>
+                    <TextField
+                      value={state.address}
+                      onChange={(e) => setState((prev) => ({ ...prev, address: e.target.value }))}
+                      placeholder="Ej: Av. Corrientes 1000"
+                      fullWidth
+                      required
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 4 }}>
+                    <FieldLabel>Ciudad</FieldLabel>
+                    <TextField value="CABA" fullWidth disabled />
+                  </Grid>
+                </Grid>
+                <Box>
+                  <FieldLabel>Barrio</FieldLabel>
+                  <TextField
+                    select
+                    fullWidth
+                    value={state.neighborhood}
+                    onChange={(e) => setState((prev) => ({ ...prev, neighborhood: e.target.value }))}
+                    required
+                  >
+                    {neighborhoods.map((n) => (
+                      <MenuItem key={n.id} value={n.name}>
+                        {n.name}
+                      </MenuItem>
+                    ))}
+                    {state.neighborhood && !neighborhoods.some((n) => n.name === state.neighborhood) ? (
+                      <MenuItem value={state.neighborhood}>{state.neighborhood}</MenuItem>
+                    ) : null}
+                  </TextField>
+                </Box>
 
-      <Stack direction="row" spacing={1.5}>
-        <Button type="submit" variant="contained" disabled={saving}>
-          {saving ? "Guardando..." : isEditing ? "Actualizar propiedad" : "Crear propiedad"}
-        </Button>
-        {isEditing ? (
-          <Button type="button" variant="outlined" onClick={onCancelEdit} disabled={saving}>
-            Cancelar edición
-          </Button>
-        ) : null}
-      </Stack>
-    </Stack>
+                <Box
+                  sx={{
+                    position: "relative",
+                    height: 180,
+                    borderRadius: 1,
+                    border: 1,
+                    borderColor: "divider",
+                    overflow: "hidden",
+                    backgroundImage:
+                      "linear-gradient(rgba(245,245,245,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(245,245,245,0.05) 1px, transparent 1px)",
+                    backgroundSize: "24px 24px",
+                    bgcolor: "background.default",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Stack spacing={0.5} sx={{ alignItems: "center", color: "text.secondary" }}>
+                    <PlaceRoundedIcon sx={{ color: "primary.main", fontSize: 32 }} />
+                    <Typography sx={{ fontFamily: FONT_MONO, fontSize: 12 }}>{neighborhoodLabel}, CABA</Typography>
+                  </Stack>
+                </Box>
+              </Stack>
+            </Paper>
+
+            <Paper variant="outlined" sx={{ p: { xs: 2.5, sm: 3 } }}>
+              <SectionHeading icon={<HouseSidingOutlinedIcon />} title="Características" />
+              <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid size={{ xs: 6, sm: 3 }}>
+                  <FieldLabel>Ambientes</FieldLabel>
+                  <TextField
+                    type="number"
+                    value={state.rooms}
+                    onChange={(e) => setState((prev) => ({ ...prev, rooms: e.target.value }))}
+                    fullWidth
+                    required
+                  />
+                </Grid>
+                <Grid size={{ xs: 6, sm: 3 }}>
+                  <FieldLabel>Dormitorios</FieldLabel>
+                  <TextField
+                    type="number"
+                    value={state.bedrooms}
+                    onChange={(e) => setState((prev) => ({ ...prev, bedrooms: e.target.value }))}
+                    fullWidth
+                  />
+                </Grid>
+                <Grid size={{ xs: 6, sm: 3 }}>
+                  <FieldLabel>Baños</FieldLabel>
+                  <TextField
+                    type="number"
+                    value={state.bathrooms}
+                    onChange={(e) => setState((prev) => ({ ...prev, bathrooms: e.target.value }))}
+                    fullWidth
+                  />
+                </Grid>
+                <Grid size={{ xs: 6, sm: 3 }}>
+                  <FieldLabel>Sup. total m²</FieldLabel>
+                  <TextField
+                    value={state.totalM2}
+                    onChange={(e) => setState((prev) => ({ ...prev, totalM2: e.target.value }))}
+                    fullWidth
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <FieldLabel>M2 cubiertos</FieldLabel>
+                  <TextField
+                    value={state.coveredM2}
+                    onChange={(e) => setState((prev) => ({ ...prev, coveredM2: e.target.value }))}
+                    fullWidth
+                    required
+                  />
+                </Grid>
+              </Grid>
+
+              <FieldLabel>Comodidades y amenities</FieldLabel>
+              <Grid container>
+                {amenityOptions.map((amenity) => (
+                  <Grid key={amenity.id} size={{ xs: 6, sm: 4 }}>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={state.amenities.includes(amenity.name)}
+                          onChange={() => toggleAmenity(amenity.name)}
+                        />
+                      }
+                      label={amenity.name}
+                    />
+                  </Grid>
+                ))}
+              </Grid>
+            </Paper>
+          </Stack>
+        </Grid>
+
+        {/* Sidebar */}
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Stack spacing={3} sx={{ position: { md: "sticky" }, top: { md: 24 } }}>
+            <Paper variant="outlined" sx={{ p: { xs: 2.5, sm: 3 } }}>
+              <SectionHeading icon={<PhotoCameraOutlinedIcon />} title="Multimedia" />
+              <ImageUploader
+                images={state.images}
+                disabled={saving !== null}
+                maxImages={MAX_IMAGES}
+                onFilesSelected={handleFilesSelected}
+                onRemoveImage={handleRemoveImage}
+                onMoveImage={(from, to) =>
+                  setState((prev) => {
+                    const images = prev.images.slice();
+                    const [moved] = images.splice(from, 1);
+                    images.splice(to, 0, moved);
+                    return { ...prev, images };
+                  })
+                }
+              />
+            </Paper>
+
+            <Paper variant="outlined" sx={{ p: { xs: 2.5, sm: 3 } }}>
+              <Typography sx={{ fontFamily: FONT_MONO, fontSize: 12, letterSpacing: "0.08em", color: "primary.main", mb: 1 }}>
+                {isEditing && selectedProperty?.published ? "PUBLICADA" : "BORRADOR"}
+              </Typography>
+              <Typography color="text.secondary" sx={{ mb: 2.5 }}>
+                {isEditing
+                  ? "Guardá los cambios o publicá esta propiedad en el sitio."
+                  : "Guardá como borrador para revisión, o publicala directamente en el sitio."}
+              </Typography>
+              <Stack spacing={1.25}>
+                <Tooltip
+                  title={
+                    missingFields.length > 0 ? (
+                      <>
+                        Faltan completar: {missingFields.join(", ")}
+                      </>
+                    ) : (
+                      ""
+                    )
+                  }
+                >
+                  <span>
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      fullWidth
+                      disabled={saving !== null || missingFields.length > 0}
+                      sx={{ fontFamily: FONT_MONO, fontSize: 13, letterSpacing: "0.06em" }}
+                    >
+                      {saving === "publish" ? "Publicando..." : "Publicar"}
+                    </Button>
+                  </span>
+                </Tooltip>
+                <Button
+                  type="button"
+                  variant="outlined"
+                  disabled={saving !== null}
+                  onClick={() => void submit(false)}
+                >
+                  {saving === "draft" ? "Guardando..." : "Guardar como borrador"}
+                </Button>
+                <Divider sx={{ my: 0.5 }} />
+                <Button type="button" variant="text" color="inherit" onClick={onCancel} disabled={saving !== null}>
+                  Cancelar
+                </Button>
+              </Stack>
+            </Paper>
+
+            <Paper variant="outlined" sx={{ p: { xs: 2.5, sm: 3 } }}>
+              <FormControlLabel
+                sx={{ ml: 0, width: "100%", justifyContent: "space-between" }}
+                labelPlacement="start"
+                control={
+                  <Switch
+                    checked={state.active}
+                    onChange={(e) => setState((prev) => ({ ...prev, active: e.target.checked }))}
+                  />
+                }
+                label={
+                  <Box>
+                    <Typography sx={{ fontWeight: 600 }}>Publicada</Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Habilita o deshabilita la visibilidad de esta propiedad en el sitio.
+                    </Typography>
+                  </Box>
+                }
+              />
+            </Paper>
+          </Stack>
+        </Grid>
+      </Grid>
+    </Box>
   );
 }

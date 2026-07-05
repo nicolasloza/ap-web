@@ -1,6 +1,7 @@
 import type {
   AdminUserDetailResponse,
   AdminUserListResponse,
+  AmenityListResponse,
   NeighborhoodListResponse,
   PropertyDetailResponse,
   PropertyInput,
@@ -22,6 +23,10 @@ export type PropertyListFilters = {
   q?: string;
   type?: string;
   operation?: Operation;
+  neighborhood?: string;
+  minRooms?: number;
+  minPrice?: number;
+  maxPrice?: number;
 };
 
 function baseUrl() {
@@ -48,6 +53,18 @@ export async function fetchPropertyList(
   }
   if (filters.operation) {
     u.searchParams.set("operation", filters.operation);
+  }
+  if (filters.neighborhood?.trim()) {
+    u.searchParams.set("neighborhood", filters.neighborhood.trim());
+  }
+  if (filters.minRooms) {
+    u.searchParams.set("minRooms", String(filters.minRooms));
+  }
+  if (filters.minPrice !== undefined) {
+    u.searchParams.set("minPrice", String(filters.minPrice));
+  }
+  if (filters.maxPrice !== undefined) {
+    u.searchParams.set("maxPrice", String(filters.maxPrice));
   }
   const r = await fetch(u.toString());
   if (!r.ok) {
@@ -87,6 +104,50 @@ export async function fetchNeighborhoods(): Promise<NeighborhoodListResponse> {
   return r.json() as Promise<NeighborhoodListResponse>;
 }
 
+export async function fetchAmenities(): Promise<AmenityListResponse> {
+  const r = await fetch(`${baseUrl()}/properties/amenities`);
+  if (!r.ok) {
+    const text = await r.text();
+    throw new Error(text || r.statusText);
+  }
+  return r.json() as Promise<AmenityListResponse>;
+}
+
+export type AdminPropertyListFilters = {
+  q?: string;
+  operation?: Operation;
+  minPrice?: number;
+  maxPrice?: number;
+};
+
+export async function fetchAdminPropertyList(
+  page = 1,
+  pageSize = 10,
+  filters: AdminPropertyListFilters = {}
+): Promise<PropertyListResponse> {
+  const u = new URL("admin/properties", `${baseUrl()}/`);
+  u.searchParams.set("page", String(page));
+  u.searchParams.set("pageSize", String(pageSize));
+  if (filters.q?.trim()) {
+    u.searchParams.set("q", filters.q.trim());
+  }
+  if (filters.operation) {
+    u.searchParams.set("operation", filters.operation);
+  }
+  if (filters.minPrice !== undefined) {
+    u.searchParams.set("minPrice", String(filters.minPrice));
+  }
+  if (filters.maxPrice !== undefined) {
+    u.searchParams.set("maxPrice", String(filters.maxPrice));
+  }
+  const r = await fetch(u.toString());
+  if (!r.ok) {
+    const text = await r.text();
+    throw new Error(text || r.statusText);
+  }
+  return r.json() as Promise<PropertyListResponse>;
+}
+
 export async function sendContactMessage(payload: ContactMessagePayload): Promise<void> {
   const r = await fetch(`${baseUrl()}/contact`, {
     method: "POST",
@@ -114,6 +175,18 @@ export async function uploadPropertyImage(file: File): Promise<UploadedPropertyI
     throw new Error(text || r.statusText);
   }
   return r.json() as Promise<UploadedPropertyImage>;
+}
+
+export async function fetchAdminPropertyById(id: string): Promise<PropertyDetailResponse> {
+  const r = await fetch(`${baseUrl()}/admin/properties/${encodeURIComponent(id)}`);
+  if (r.status === 404) {
+    throw new Error("not_found");
+  }
+  if (!r.ok) {
+    const text = await r.text();
+    throw new Error(text || r.statusText);
+  }
+  return r.json() as Promise<PropertyDetailResponse>;
 }
 
 export async function createProperty(payload: PropertyInput): Promise<PropertyDetailResponse> {

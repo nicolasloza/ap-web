@@ -1,5 +1,6 @@
 export type Operation = "sale" | "rent";
 export type Currency = "ARS" | "USD";
+export type PropertyStatus = "available" | "reserved" | "sold" | "rented";
 
 export interface PropertyImage {
   id: string;
@@ -17,14 +18,24 @@ export interface Property {
   operation: Operation;
   type: string;
   title: string;
+  address: string;
   description: string;
   price: string;
   currency: Currency;
   neighborhood: string;
   city: string;
   rooms: number;
+  bedrooms: number;
+  bathrooms: number;
   coveredM2: string;
   totalM2: string | null;
+  published: boolean;
+  active: boolean;
+  status: PropertyStatus;
+  isReserved: boolean;
+  isSold: boolean;
+  isRented: boolean;
+  amenities: string[];
   createdAt: string;
   updatedAt: string;
   images: PropertyImage[];
@@ -65,14 +76,21 @@ export interface PropertyInput {
   operation: Operation;
   type: string;
   title: string;
+  address: string;
   description: string;
   price: string;
   currency: Currency;
   neighborhood: string;
   city: string;
   rooms: number;
+  bedrooms: number;
+  bathrooms: number;
   coveredM2: string;
   totalM2: string | null;
+  published: boolean;
+  active: boolean;
+  status: PropertyStatus;
+  amenities: string[];
   images: PropertyImageInput[];
 }
 
@@ -109,4 +127,13 @@ export interface NeighborhoodOption {
 
 export interface NeighborhoodListResponse {
   data: NeighborhoodOption[];
+}
+
+export interface AmenityOption {
+  id: string;
+  name: string;
+}
+
+export interface AmenityListResponse {
+  data: AmenityOption[];
 }

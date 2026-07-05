@@ -22,6 +22,7 @@ import {
 } from "@mui/material";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
+import BackOfficeLayout from "../components/layout/BackOfficeLayout";
 import { createAdminUser, deleteAdminUser, fetchAdminUsers, updateAdminUser } from "../api/client";
 import type { AdminUser } from "../types/property";
 
@@ -135,11 +136,12 @@ export default function BackOfficeUsersPage() {
   const usersTitle = useMemo(() => (loadingUsers ? "Usuarios (cargando...)" : `Usuarios (${users.length})`), [loadingUsers, users.length]);
 
   return (
+    <BackOfficeLayout>
     <Box sx={{ p: { xs: 2, sm: 3 } }}>
       <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "center", mb: 2 }}>
         <Box>
           <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, fontSize: { xs: "1.4rem", sm: "1.6rem" } }} component="h1">
-            Back office · Usuarios
+            Usuarios
           </Typography>
           <Typography color="text.secondary">Gestión de usuarios del back office.</Typography>
         </Box>
@@ -258,5 +260,6 @@ export default function BackOfficeUsersPage() {
         </Box>
       </Dialog>
     </Box>
+    </BackOfficeLayout>
   );
 }

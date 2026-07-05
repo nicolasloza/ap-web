@@ -13,12 +13,12 @@ export default function HomeHeroSection({ children, backgroundImageUrl }: HomeHe
             component="section"
             sx={{
                 position: "relative",
-                minHeight: { xs: 420, sm: 460, lg: 540 },
+                minHeight: { xs: "calc(100vh - 56px)", sm: "calc(100vh - 72px)" },
                 color: "secondary.contrastText",
                 display: "flex",
                 alignItems: "center",
                 backgroundImage: (theme) =>
-                    `linear-gradient(${alpha(theme.palette.secondary.dark, 0.62)}, ${alpha(theme.palette.secondary.dark, 0.62)}), url(${backgroundImageUrl})`,
+                    `linear-gradient(to bottom, transparent 0%, ${alpha(theme.palette.background.default, 0.6)} 60%, ${theme.palette.background.default} 100%), url(${backgroundImageUrl})`,
                 backgroundPosition: "center",
                 backgroundRepeat: "no-repeat",
                 backgroundSize: "cover",

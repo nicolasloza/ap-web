@@ -1,12 +1,15 @@
-import { Card, Container, Grid, Skeleton, Stack, Typography } from "@mui/material";
+import { Box, Card, Container, Divider, Grid, Skeleton, Stack, Typography } from "@mui/material";
 import { useMemo } from "react";
 import { PROPERTY_TYPE_OPTIONS } from "../features/constants/propertyTypes";
 import PropertySearchBar from "../features/home/components/PropertySearchBar";
 import ActivePropertyFiltersBar from "../features/properties/components/ActivePropertyFiltersBar";
 import PropertyListCard from "../features/properties/components/PropertyListCard";
+import PropertyListPagination from "../features/properties/components/PropertyListPagination";
 import { usePropertyListData } from "../features/properties/hooks/usePropertyListData";
 import { usePropertyListQueryState } from "../features/properties/hooks/usePropertyListQueryState";
+import { useNeighborhoods } from "../features/properties/hooks/useNeighborhoods";
 import { sortProperties } from "../features/properties/utils/sortProperties";
+import { FONT_MONO } from "../theme/tokens";
 
 function PropertyCardSkeleton() {
   return (
@@ -27,24 +30,40 @@ export default function PropertyListPage() {
     query,
     propertyType,
     operationFromQuery,
+    neighborhood,
+    minRooms,
+    priceRange,
     sort,
+    page,
     propertyTypeLabel,
     hasAnyFilter,
     searchTerm,
     selectedPropertyType,
     selectedOperation,
+    selectedNeighborhood,
+    selectedMinRooms,
+    selectedPriceRange,
     setSearchTerm,
     setSelectedPropertyType,
     setSelectedOperation,
+    setSelectedNeighborhood,
+    setSelectedMinRooms,
+    setSelectedPriceRange,
     onSearchSubmit,
     onSortChange,
+    onPageChange,
     clearFilters,
     clearFilter,
   } = usePropertyListQueryState();
-  const { items, loading, error } = usePropertyListData({
+  const { neighborhoods } = useNeighborhoods();
+  const { items, total, totalPages, loading, error } = usePropertyListData({
     query,
     propertyType,
     operationFromQuery,
+    neighborhood,
+    minRooms,
+    priceRange,
+    page,
   });
 
   const sortedItems = useMemo(() => {
@@ -66,29 +85,53 @@ export default function PropertyListPage() {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: { xs: 2.5, sm: 3 } }}>
-      <Typography variant="h4" component="h1" gutterBottom sx={{ fontSize: { xs: "1.7rem", sm: "2rem" } }}>
+    <Container maxWidth="lg" sx={{ py: { xs: 3, sm: 4 } }}>
+      <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 1.5 }}>
+        <Divider sx={{ width: 24, borderBottomWidth: 2, borderColor: "primary.main" }} />
+        <Typography
+          sx={{ fontFamily: FONT_MONO, fontSize: 12, letterSpacing: "0.1em", color: "primary.main" }}
+        >
+          PORTFOLIO {new Date().getFullYear()}
+        </Typography>
+      </Stack>
+      <Typography variant="h3" component="h1" gutterBottom sx={{ fontSize: { xs: "2rem", sm: "2.75rem" } }}>
         Propiedades
       </Typography>
-      <PropertySearchBar
-        searchTerm={searchTerm}
-        propertyType={selectedPropertyType}
-        operation={selectedOperation}
-        propertyTypeOptions={PROPERTY_TYPE_OPTIONS}
-        onSearchTermChange={setSearchTerm}
-        onPropertyTypeChange={setSelectedPropertyType}
-        onOperationChange={setSelectedOperation}
-        sort={sort}
-        onSortChange={onSortChange}
-        onSubmit={onSearchSubmit}
-      />
+      <Typography color="text.secondary" sx={{ maxWidth: 640, mb: 3 }}>
+        Una selección curada de propiedades y oportunidades de inversión en las zonas más
+        exclusivas. Precisión en la selección, excelencia en la ejecución.
+      </Typography>
+      <Box sx={{ mb: 3 }}>
+        <PropertySearchBar
+          searchTerm={searchTerm}
+          propertyType={selectedPropertyType}
+          operation={selectedOperation}
+          propertyTypeOptions={PROPERTY_TYPE_OPTIONS}
+          onSearchTermChange={setSearchTerm}
+          onPropertyTypeChange={setSelectedPropertyType}
+          onOperationChange={setSelectedOperation}
+          sort={sort}
+          onSortChange={onSortChange}
+          onSubmit={onSearchSubmit}
+          neighborhoods={neighborhoods}
+          selectedNeighborhood={selectedNeighborhood}
+          onNeighborhoodChange={setSelectedNeighborhood}
+          selectedPriceRange={selectedPriceRange}
+          onPriceRangeChange={setSelectedPriceRange}
+          selectedMinRooms={selectedMinRooms}
+          onMinRoomsChange={setSelectedMinRooms}
+        />
+      </Box>
       <ActivePropertyFiltersBar
         hasAnyFilter={hasAnyFilter}
         query={query}
         propertyType={propertyType}
         propertyTypeLabel={propertyTypeLabel}
         operationFromQuery={operationFromQuery}
-        itemsLength={items.length}
+        neighborhood={neighborhood}
+        minRooms={minRooms}
+        priceRange={priceRange}
+        itemsLength={total}
         loading={loading}
         onClearFilters={clearFilters}
         onClearFilter={clearFilter}
@@ -111,13 +154,16 @@ export default function PropertyListPage() {
           No encontramos propiedades con ese criterio. Probá otra búsqueda.
         </Typography>
       ) : (
-        <Grid container spacing={{ xs: 1.5, sm: 2 }} sx={{ mt: hasAnyFilter ? 0 : 2 }}>
-          {sortedItems.map((property) => (
-            <Grid key={property.id} size={{ xs: 12, sm: 6, md: 4 }}>
-              <PropertyListCard property={property} />
-            </Grid>
-          ))}
-        </Grid>
+        <>
+          <Grid container spacing={{ xs: 1.5, sm: 2 }} sx={{ mt: hasAnyFilter ? 0 : 2 }}>
+            {sortedItems.map((property) => (
+              <Grid key={property.id} size={{ xs: 12, sm: 6, md: 4 }}>
+                <PropertyListCard property={property} />
+              </Grid>
+            ))}
+          </Grid>
+          <PropertyListPagination page={page} totalPages={totalPages} onPageChange={onPageChange} />
+        </>
       )}
     </Container>
   );

@@ -1,5 +1,6 @@
 import { Box, Button, Chip, Stack, Typography } from "@mui/material";
 import type { Operation } from "../../../types/property";
+import type { PriceRangeOption } from "../constants/priceRanges";
 
 type ActivePropertyFiltersBarProps = {
   hasAnyFilter: boolean;
@@ -7,10 +8,13 @@ type ActivePropertyFiltersBarProps = {
   propertyType: string;
   propertyTypeLabel: string;
   operationFromQuery: Operation | undefined;
+  neighborhood: string;
+  minRooms: number | undefined;
+  priceRange: PriceRangeOption | undefined;
   itemsLength: number;
   loading: boolean;
   onClearFilters: () => void;
-  onClearFilter: (key: "q" | "type" | "operation") => void;
+  onClearFilter: (key: "q" | "type" | "operation" | "neighborhood" | "minRooms" | "priceRange") => void;
 };
 
 export default function ActivePropertyFiltersBar({
@@ -19,6 +23,9 @@ export default function ActivePropertyFiltersBar({
   propertyType,
   propertyTypeLabel,
   operationFromQuery,
+  neighborhood,
+  minRooms,
+  priceRange,
   itemsLength,
   loading,
   onClearFilters,
@@ -26,7 +33,14 @@ export default function ActivePropertyFiltersBar({
 }: ActivePropertyFiltersBarProps) {
   if (!hasAnyFilter) return null;
 
-  const filterCount = [query, propertyType, operationFromQuery].filter(Boolean).length;
+  const filterCount = [
+    query,
+    propertyType,
+    operationFromQuery,
+    neighborhood,
+    minRooms,
+    priceRange?.value,
+  ].filter(Boolean).length;
   const showCount = !loading && itemsLength > 0;
 
   return (
@@ -45,6 +59,15 @@ export default function ActivePropertyFiltersBar({
             size="small"
             onDelete={() => onClearFilter("operation")}
           />
+        )}
+        {neighborhood && (
+          <Chip label={neighborhood} size="small" onDelete={() => onClearFilter("neighborhood")} />
+        )}
+        {minRooms && (
+          <Chip label={`${minRooms}+ ambientes`} size="small" onDelete={() => onClearFilter("minRooms")} />
+        )}
+        {priceRange?.value && (
+          <Chip label={priceRange.label} size="small" onDelete={() => onClearFilter("priceRange")} />
         )}
       </Stack>
 
